@@ -7,3 +7,5 @@ a sort of usable equivalent of a "desktop screenshot", a time capsule to look
 back on.
 
 **Current release:** [RocketISO 2024](docs/RELEASE-2024.md)
+
+See also [docs/BUILDING.md](docs/BUILDING.md) for an overview of how these scripts are used.

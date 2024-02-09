@@ -1,11 +1,21 @@
 RocketISO 2024
 ==============
 
+RocketISO 2024 is a live distribution based on my current main system and
+configuration. It serves as a sort of bootable equivalent of a "desktop
+screenshot", and a time capsule to look back on. Included in the image are a
+whole range of preconfigured applications that I think are worth checking out.
+You could say it's the culmination of over a decade of using linux on different
+computers.
+
+[**Skip to the Documentation/Downloads section below**](#Documentation)
+
+Release notes
+-------------
+
 First release, not sure what to say. This document is a ramble. More organized
 words can be found in the built-in Readme, or in the documentation section
 below.
-
-[**Skip to the Documentation/Downloads section below**](#Documentation)
 
 It took me some two months to put this together, during which I've diligently
 not updated my system, to not have to deal with a moving target. The part that

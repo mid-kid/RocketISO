@@ -81,6 +81,8 @@ Documentation
 * [On-line version of the builtin readme](https://htmlpreview.github.io/?https://raw.githubusercontent.com/mid-kid/RocketISO/master/docs/README-2024.html)
 * [Errata: known bugs/mistakes and fixes](ERRATA-2024.md)
 
+The user account has no password. Simply press enter to log in.
+
 Downloads
 ---------
 

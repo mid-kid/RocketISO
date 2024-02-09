@@ -1,6 +1,10 @@
 #!/bin/sh
 set -eu
-qemu-system-x86_64 -drive file=image.iso,format=raw \
+qemu-system-x86_64 -drive file=image.iso,format=raw,readonly=on,media=cdrom \
     -bios /usr/share/edk2-ovmf/OVMF_CODE.fd \
-    -enable-kvm \
-    -m 4G
+    -accel kvm \
+    -cpu host -smp 4 \
+    -m 4G \
+    -display gtk,grab-on-hover=on,gl=on \
+    -vga virtio \
+    -usb -usbdevice tablet

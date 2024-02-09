@@ -2,7 +2,8 @@ RocketISO 2024
 ==============
 
 First release, not sure what to say. This document is a ramble. More organized
-words can be found in the built-in Readme, or in the downloads sections below.
+words can be found in the built-in Readme, or in the documentation section
+below.
 
 [**Skip to the Documentation/Downloads section below**](#Documentation)
 
@@ -35,19 +36,19 @@ Can we talk about how versatile Gentoo is? I feel that gets swept under the rug
 a lot. I've been following the discourse surrounding the freshening-up of
 binary packages, which in my opinion is the best thing to happen to Gentoo
 since the introduction of the distribution kernels. People treat it like it's
-some crazy thing, a mistimed april fools' joke, when it really just is
-completely in character for the distribution. Gentoo, at least to me, is a
-framework from which to build and customize a system. It has good defaults, but
-when you need to, allows you to tweak any aspect of the system, by modifying
-any step in its creation. Building from source in this sense has always been a
-tool to achieve this, not a necessity. A hybrid, binary-source package manager
-is a great way to do things in my opinion, portage has always been this. And,
-as it turns out, other distributions have started to pick up on this, like Nix
-and Guix, both of which are hybrid package managers as well. It always saddens
-me when people dismiss Gentoo as "that one *hardcore* distro for people who
-like building from source all day, why would a *normal* person ever do that?".
-Given how it makes my life significantly easier and gets out of my way, I don't
-think it could be further from the truth.
+some crazy thing, a mistimed april fools' joke, when it really is completely in
+character for the distribution. Gentoo, at least to me, is a framework from
+which to build and customize a system. It has good defaults, but when you need
+to, allows you to tweak any aspect of the system, by modifying any step in its
+creation. Building from source in this sense has always been a tool to achieve
+this, not a necessity. A hybrid, binary-source package manager is a great way
+to do things in my opinion, portage has always been this. And, as it turns out,
+other distributions have started to pick up on this, like Nix and Guix, both of
+which are hybrid package managers as well. It always saddens me when people
+dismiss Gentoo as "that one *hardcore* distro for people who like building from
+source all day, why would a *normal* person ever do that?".  Given how it makes
+my life significantly easier and gets out of my way, I don't think it could be
+further from the truth.
 
 Some configuration files and repositories in the ISO may be newer than the
 Gentoo tree. My computer is a living document, and even if I "freeze" the
@@ -59,8 +60,8 @@ of /usr/lib* on startup.
 Technical details
 -----------------
 
-* Based on ::gentoo tree with timestamp `Thu 30 Nov 2023 10:40:01 PM UTC`
-(metadata/timestamp.x)
+* Based on ::gentoo tree with timestamp `Thu 30 Nov 2023 10:40:01 PM UTC` (metadata/timestamp.x)
+* Tested on laptop, VirtualBox, and libvirt/virt-manager.
 
 Documentation
 -------------

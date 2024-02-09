@@ -4,7 +4,7 @@ RocketISO 2024
 First release, not sure what to say. This document is a ramble. More organized
 words can be found in the built-in Readme, or in the downloads sections below.
 
-[**Skip to the Downloads section below**](#Downloads)
+[**Skip to the Documentation/Downloads section below**](#Documentation)
 
 It took me some two months to put this together, during which I've diligently
 not updated my system, to not have to deal with a moving target. The part that
@@ -62,6 +62,12 @@ Technical details
 * Based on ::gentoo tree with timestamp `Thu 30 Nov 2023 10:40:01 PM UTC`
 (metadata/timestamp.x)
 
+Documentation
+-------------
+
+* [On-line version of the builtin readme](https://htmlpreview.github.io/?https://raw.githubusercontent.com/mid-kid/RocketISO/master/docs/README-2024.html)
+* [Errata: known bugs/mistakes and fixes](ERRATA-2024.md)
+
 Downloads
 ---------
 
@@ -71,7 +77,7 @@ Torrent: [rocketiso-amd64-2024\_archive.torrent](https://archive.org/download/ro
 
 Individual files (HTTP):
 
-* [ISO](https://archive.org/download/rocketiso-amd64-2024/RocketISO-amd64-2024.iso)
+* [Bootable ISO](https://archive.org/download/rocketiso-amd64-2024/RocketISO-amd64-2024.iso)
 * [gencfg.diff](https://archive.org/download/rocketiso-amd64-2024/RocketISO-amd64-2024-gencfg.diff): A unified diff of the `/etc` directory, to help document the configuration.
 * [gencfg.log](https://archive.org/download/rocketiso-amd64-2024/RocketISO-amd64-2024-gencfg.log): The log output for the `gencfg` step of building the image, to help document the configuration.
 * [repos.squashfs](https://archive.org/download/rocketiso-amd64-2024/RocketISO-amd64-2024-repos.squashfs): The ebuild repositories used to build the image.

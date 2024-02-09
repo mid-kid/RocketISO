@@ -6,7 +6,8 @@ This document describes things I want to fix in a future release, they're not sp
 Bugs
 ----
 
-* N/A so far
+* Kdenlive displays white icons on a white background
+    * Fix: `kwriteconfig5 --file kdenliverc --group unmanaged --key force_breeze false`
 
 Improvements
 ------------

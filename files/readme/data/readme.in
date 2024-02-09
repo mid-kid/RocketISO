@@ -1,0 +1,13 @@
+#!/bin/sh
+file="$(realpath ${1:-@pkgdatadir@/readme.man})"
+
+export LESS='-RX'
+export MANROFFOPT='-c'
+export MANPAGER='less --use-color -Dk+r -Dd+b -Du+c -Dsg -DEg -DPg -DSg'
+
+if [ -n "$DISPLAY" ]; then
+    # Absolutely no idea why the 'echo >&0' is necessary, but the
+    #  manual turns up blank without it.
+    exec "$TERMINAL" -name floating -e sh -c "echo >&0; man '$file'"
+fi
+exec man "$file"

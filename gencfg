@@ -1,0 +1,323 @@
+#!/bin/sh
+set -eu
+
+CWD="$(dirname "$0")"
+BROOT="${2:-/}"
+ROOT="${1:-$PWD/root}"
+
+# Helpers
+clone_git() {
+    echo "clone_git $1"
+    src="$BROOT$1"
+    dst="$ROOT$1"
+    url="$2"
+    if [ ! -d "$dst/.git" ]; then
+        git clone --depth=1 --recursive "file://$src" "$dst"
+        git -C "$dst" remote set-url origin "$url"
+        git -C "$dst" gc --aggressive --prune=now
+    else
+        git -C "$dst" pull "file://$src" --rebase -q
+    fi
+}
+
+clone_rsync() {
+    src="$BROOT$1"
+    dst="$ROOT$1"
+    shift
+    rsync --info=stats0,flist0 -rlv "$@" "$src/" "$dst"
+}
+
+clone_file() {
+    src="$BROOT$1"
+    dst="$ROOT$1"
+    shift
+    install -v -Dm644 "$@" "$src" "$dst"
+}
+
+_einfo() {
+    ( set +eu; . /etc/init.d/functions.sh
+        einfo "$@"
+    )
+}
+
+# Make user and set empty passwords
+groups="$(groups mid-kid | sed -e 's/ *mid-kid *//g' -e 's/ /,/g')"
+#groups="$groups,vboxguest,vboxsf"
+useradd -R "$ROOT" -G "$groups" -s /bin/zsh -m mid-kid || test $? -eq 9
+passwd -R "$ROOT" -d root
+passwd -R "$ROOT" -l root  # disallow password login
+passwd -R "$ROOT" -d mid-kid
+mkdir -p "$ROOT/home/mid-kid/.config"
+mkdir -p "$ROOT/home/mid-kid/.local/share"
+
+# Copy configurations
+clone_rsync /etc/modprobe.d \
+    --exclude=alsa.conf
+clone_rsync /etc/modules-load.d \
+    --exclude=loop.conf
+clone_rsync /etc/X11/xorg.conf.d
+clone_rsync /etc/sddm.conf.d \
+    --exclude=01gentoo.conf
+clone_rsync /etc/sysctl.d \
+    --exclude=README
+
+clone_file /etc/bluetooth/main.conf
+clone_file /etc/conf.d/display-manager
+clone_file /etc/conf.d/dnsmasq
+clone_file /etc/conf.d/keymaps
+clone_file /etc/conf.d/netmount
+clone_file /etc/cron.weekly/trim
+clone_file /etc/dhcpcd.conf
+clone_file /etc/dnsmasq.conf
+clone_file /etc/elogind/logind.conf
+clone_file /etc/elogind/system-sleep/50-led_off
+clone_file /etc/env.d/02locale
+clone_file /etc/init.d/mid-kid.tmux -m755
+clone_file /etc/init.d/mid-kid.webfsd -m755
+clone_file /etc/local.d/iw_regdom.start -m755
+clone_file /etc/local.d/led_off.start -m755
+clone_file /etc/local.d/portage_clean.start -m755
+clone_file /etc/locale.gen
+clone_file /etc/pam.d/i3lock
+clone_file /etc/polkit-1/rules.d/40-wheel.rules
+clone_file /etc/rc.conf
+clone_file /etc/resolv.conf.head
+clone_file /etc/security/faillock.conf
+clone_file /etc/sudoers
+clone_file /etc/udev/rules.d/10-rfkill.rules
+clone_file /etc/udev/rules.d/10-trackpoint.rules
+
+clone_git /home/mid-kid/.dotfiles https://github.com/mid-kid/config
+clone_git /home/mid-kid/.config/firejail https://github.com/mid-kid/firejail-profiles
+
+clone_file /home/mid-kid/.config/wallpaper.jpg
+
+# Slow copies (many big data files)
+for x in \
+    /home/mid-kid/.icons \
+    /home/mid-kid/.themes
+do
+    if [ ! -d "$ROOT$x" ]; then
+        _einfo "Installing $x"
+        clone_rsync "$x" -q
+    fi
+done
+
+# Copy vim plugins
+mkdir -p "$ROOT/home/mid-kid/.local/share/vim/plugged"
+clone_rsync /home/mid-kid/.local/share/vim/autoload
+
+for x in "$BROOT/home/mid-kid/.local/share/vim/plugged"/*; do
+    name="$(basename "$x")"
+    url="$(git -C "$x" remote get-url origin)"
+    clone_git "/home/mid-kid/.local/share/vim/plugged/$name" "$url"
+done
+
+# Copy firefox configuration and addons
+ffsrc="$(printf '%s\n' "$BROOT/home/mid-kid/.mozilla/firefox/"*.default | head -n1)"
+ffdst="$ROOT/home/mid-kid/.mozilla/firefox/default"
+if [ ! -d "$ffdst" ]; then
+    _einfo 'Installing /home/mid-kid/.mozilla/firefox/default'
+    "$CWD/copy_firefox" "$ffsrc" "$ffdst"
+fi
+
+# Copy firejail applications
+mkdir -p "$ROOT/home/mid-kid/.local/share/firejail"
+for name in osu ltspice; do
+    if [ ! -d "$ROOT/home/mid-kid/.local/share/firejail/$name" ]; then
+        _einfo "Installing /home/mid-kid/.local/share/firejail/$name"
+        tar xf "$CWD/data/firejail/$name.tar.xz" -C \
+            "$ROOT/home/mid-kid/.local/share/firejail"
+    fi
+done
+
+# Copy live-specific scripts
+install -v -Dm755 "$CWD/files/live" "$ROOT/home/mid-kid/.config/live"
+_einfo 'Unpacking data/readme-0-bin.tar.gz'
+tar xf "$CWD/data/readme-0-bin.tar.gz" -C "$ROOT"
+_einfo 'Unpacking data/rocketset-0-bin.tar.gz'
+tar xf "$CWD/data/rocketset-0-bin.tar.gz" -C "$ROOT"
+
+mkdir -p "$ROOT/home/mid-kid/.local/share/rofi"
+tac "$CWD/files/applist" | sed -e '/^$/d' -e '/^#/d' | \
+    awk 'BEGIN{x=0}{print x " " $0 ".desktop"; x+=100}' | tac \
+    > "$ROOT/home/mid-kid/.local/share/rofi/rofi3.druncache"
+
+# Install system configurations
+sed -e '/^hostname=/chostname="PocketRocket"' -i "$ROOT/etc/conf.d/hostname"
+sed -e 's/^[^#].*localhost$/& PocketRocket/' -i "$ROOT/etc/hosts"
+echo Europe/Madrid > "$ROOT/etc/timezone"
+rm -f "$ROOT/etc/localtime"
+cp "$ROOT/usr/share/zoneinfo/Europe/Madrid" "$ROOT/etc/localtime"
+
+sed -e '/^#\?rc_logger=/crc_logger="YES"' \
+    -e '/^#\?rc_hotplug/crc_hotplug="net.*"' \
+    -i "$ROOT/etc/rc.conf"
+
+cat > "$ROOT/etc/fstab" << 'EOF'
+LiveOS_rootfs / overlay defaults 0 0
+EOF
+test -f "$ROOT/etc/wpa_supplicant/wpa_supplicant.conf" || \
+    cat > "$ROOT/etc/wpa_supplicant/wpa_supplicant.conf" << 'EOF'
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=wheel
+update_config=1
+EOF
+cat > "$ROOT/etc/tlp.d/my.conf" << 'EOF'
+TLP_ENABLE=1
+EOF
+cat > "$ROOT/var/lib/sddm/state.conf" << 'EOF'
+[Last]
+User=mid-kid
+Session=/usr/share/xsessions/i3.desktop
+EOF
+
+ln -vsfT ../kernel/modprobed_db/modprobed_db.sh "$ROOT/etc/local.d/modprobed_db.stop"
+ln -vsfT ../kernel/modprobed_db/modprobed_db.sh "$ROOT/etc/cron.hourly/modprobed_db"
+
+# Install user configurations
+test -h "$ROOT/home/mid-kid/.bashrc" || rm -f "$ROOT/home/mid-kid/.bashrc"
+stows="$(find "$ROOT/home/mid-kid/.dotfiles" \
+    -maxdepth 1 ! -name '.*' ! -name 'zzz-*' -printf '%f ')"
+stow -d "$ROOT/home/mid-kid/.dotfiles" -t "$ROOT/home/mid-kid" -v -S $stows
+
+sed -e '/^backend = /cbackend = "xrender";' \
+    -i "$ROOT/home/mid-kid/.dotfiles/i3/.config/picom/picom.conf"
+
+mkdir -p "$ROOT/home/mid-kid/.mozilla/firefox/clean"
+cat > "$ROOT/home/mid-kid/.mozilla/firefox/profiles.ini" << 'EOF'
+[Profile1]
+Name=clean
+IsRelative=1
+Path=clean
+
+[Profile0]
+Name=default
+IsRelative=1
+Path=default
+Default=1
+
+[General]
+StartWithLastProfile=1
+Version=2
+
+[Install11457493C5A56847]
+Default=default
+Locked=1
+EOF
+
+mkdir -p "$ROOT/home/mid-kid/.local/share/applications"
+mkdir -p "$ROOT/home/mid-kid/.local/share/icons"
+for name in discord osu ltspice; do
+    cp "$ROOT/home/mid-kid/.config/firejail/desktop/$name.png" \
+        "$ROOT/home/mid-kid/.local/share/icons/$name.png"
+    sed -e '/^Exec=/s/~/\/home\/mid-kid/' \
+        "$ROOT/home/mid-kid/.config/firejail/desktop/$name.desktop" \
+        > "$ROOT/home/mid-kid/.local/share/applications/$name.desktop"
+done
+
+sed -e '0,/^Name=/{//s/$/ (Clean profile)/}' \
+    -e '0,/^Exec=/{//s/=.*/=firefox -P clean %u/}' \
+    "$ROOT/usr/share/applications/firefox-esr.desktop" \
+    > "$ROOT/home/mid-kid/.local/share/applications/firefox-clean.desktop"
+
+apps="$ROOT/home/mid-kid/.local/share/applications"
+mkdir -p "$apps"
+
+excl="
+    cups
+    fcitx
+    lftp
+    libreoffice-base
+    libreoffice-calc
+    libreoffice-draw
+    libreoffice-impress
+    libreoffice-math
+    libreoffice-writer
+    org.codeberg.dnkl.foot
+    org.codeberg.dnkl.foot-server
+    org.codeberg.dnkl.footclient
+    org.kde.kdeconnect-settings
+    org.kde.kdeconnect.nonplasma
+    org.kde.kdeconnect.sms
+    org.kicad.bitmap2component
+    org.kicad.eeschema
+    org.kicad.gerbview
+    org.kicad.pcbcalculator
+    org.kicad.pcbnew
+    phononsettings-phonon
+    picom
+    redshift-gtk
+    rofi
+    rofi-theme-selector
+    spicy-spice-gtk
+    urxvt-rxvt-unicode
+    wine-browsedrive
+    wine-notepad
+    wine-uninstaller
+    wine-winecfg
+    wpa_gui
+"
+for x in $excl; do
+    if [ ! -e "$BROOT/usr/share/applications/$x.desktop" ]; then
+        echo "$x.desktop not installed" 2>&1
+        exit 1
+    fi
+    echo '[Desktop Entry]' > "$apps/$x.desktop"
+    echo "Name=" >> "$apps/$x.desktop"
+    echo 'Type=Application' >> "$apps/$x.desktop"
+    echo 'NoDisplay=true' >> "$apps/$x.desktop"
+done
+
+# Configure eselect things
+for x in "$BROOT/etc/fonts/conf.d"/*.conf; do
+    name="$(basename "$x")"
+
+    if [ ! -h "$ROOT/etc/fonts/conf.d/$name" ]; then
+        _einfo "configuration $name added to fontconfig"
+        eselect --root="$ROOT" fontconfig enable "$name"
+    fi
+done
+
+eselect --root="$ROOT" pager set less
+eselect --root="$ROOT" editor set vim
+
+# https://bugs.gentoo.org/921973
+ln -vsfT "$(readlink "$BROOT/etc/java-config-2/current-system-vm")" \
+    "$ROOT/etc/java-config-2/current-system-vm"
+
+# Configure services
+chroot "$ROOT" rc-update add elogind boot
+
+for x in "$BROOT/etc/runlevels/default"/*; do
+    name="$(basename "$x")"
+    case "$name" in
+        validity) continue ;;
+        net.*) continue ;;
+    esac
+
+    if [ ! -h "$ROOT/etc/runlevels/default/$name" ]; then
+        chroot "$ROOT" rc-update add "$name" default
+    fi
+done
+
+# The net.* services will be handled through hotplug
+ln -vsfT net.lo "$ROOT/etc/init.d/net.wlan0"
+ln -vsfT net.lo "$ROOT/etc/init.d/net.eth0"
+
+#chroot "$ROOT" rc-update add virtualbox-guest-additions default
+
+# Generate locales
+test -f "$ROOT/usr/lib/locale/locale-archive" || locale-gen -d "$ROOT"
+
+# Update environment
+chroot "$ROOT" env-update
+
+# Fix permissions
+chroot "$ROOT" chown -R mid-kid:mid-kid -h /home/mid-kid
+
+# Fix permissions for breakage caused by GID differences (inexhaustive list)
+chroot "$ROOT" chown root:messagebus /usr/libexec/dbus-daemon-launch-helper
+chroot "$ROOT" chmod 4710 /usr/libexec/dbus-daemon-launch-helper
+# NOTE: The proper fix is rebuilding everything in a new chroot
+#       This just aids in testing before doing so

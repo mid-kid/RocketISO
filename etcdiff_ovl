@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+CWD="$(dirname "$0")"
+OVL="${1:-$PWD/iso/LiveOS/overlay}"
+
+sqfs="$(realpath -m "$OVL/../squashfs.img")"
+test -f "$sqfs"
+
+tmp="$(mktemp -d)"
+mkdir "$tmp/dev" "$tmp/ovl"
+mount -o ro "$sqfs" "$tmp/dev"
+mkdir -p "$OVL" "$OVL/../ovlwork"
+mount -o lowerdir="$tmp/dev",upperdir="$OVL",workdir="$OVL/../ovlwork" -t overlay overlay "$tmp/ovl"
+
+"$CWD/etcdiff" "$tmp/ovl" || true
+
+umount "$tmp/ovl" "$tmp/dev"
+rm -r "$tmp"

@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+BROOT="$(portageq envvar BROOT)"
+ROOT="${1:-$PWD/repos}"
+
+for name in $(portageq get_repos "$BROOT/"); do
+    repo="$(portageq get_repo_path "$BROOT/" "$name")"
+    src="$BROOT$repo"
+    dst="$ROOT$repo"
+    mkdir -p "$(realpath -m "$dst/..")"
+
+    if [ -d "$src/.git" ]; then
+        if [ ! -d "$dst/.git" ]; then
+            url="$(git -C "$src" remote get-url origin)"
+            git clone --depth=1 "file://$src" "$dst"
+            git -C "$dst" remote set-url origin "$url"
+            git -C "$dst" gc --aggressive --prune=now
+        else
+            git -C "$dst" pull "file://$src" --rebase -q
+        fi
+    else
+        rsync -av --delete \
+            --exclude=/distfiles \
+            --exclude=/packages \
+            "$src/" "$dst"
+    fi
+done

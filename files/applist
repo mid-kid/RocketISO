@@ -1,0 +1,93 @@
+# Format file:
+# tac applist | sed -e '/^$/d' -e '/^#/d' | awk 'BEGIN{x=0}{print x " " $0 ".desktop"; x+=100}' | tac > rofi3.druncache
+# Test:
+# XDG_DATA_HOME="$PWD" rofi -show drun -cache-dir .
+
+readme
+
+# Internetting
+firefox-esr
+firefox-clean
+claws-mail
+org.qbittorrent.qBittorrent
+org.telegram.desktop
+discord
+
+# Primary productivity
+vim
+zim
+qalculate-gtk
+org.kde.ktimetracker
+
+# Creative
+libreoffice-startcenter
+zzz-gimp
+org.inkscape.Inkscape
+blender-3.3
+org.kde.kdenlive
+com.obsproject.Studio
+audacity
+fr.handbrake.ghb
+
+# Electronics
+org.kicad.kicad
+org.sigrok.PulseView
+org.freecadweb.FreeCAD
+ltspice
+
+# Games
+teeworlds
+org.nxengine.nxengine_evo
+osu
+stepmania-5.1
+etterna
+
+# Games-emulators
+io.mgba.mGBA
+bgb
+dolphin-emu
+org.desmume.DeSmuME
+
+# Games-dev
+Tilemap Studio
+
+# Multimedia
+mpv
+org.kde.okular
+xpdf
+
+# System monitoring
+btop
+htop
+
+# Analysis
+qdbusviewer
+org.wireshark.Wireshark
+sqlitebrowser
+
+# File management
+ranger
+org.kde.dolphin
+android-file-transfer
+org.kde.kdeconnect.app
+syncthing-start
+syncthing-ui
+
+# System configuration
+blueman-manager
+qt5ct
+kvantummanager
+fcitx-configtool
+pavucontrol
+xfce4-power-manager-settings
+org.freedesktop.Piper
+designer-designer-5
+
+# System monitoring 2
+jstest-gtk
+qv4l2
+qvidcap
+
+# Virtual machines
+virtualbox
+virt-manager

@@ -1,0 +1,58 @@
+#!/bin/sh
+set -eu
+
+hook="$1"
+
+init_i3() {
+    if command -v VBoxClient-all 2>&1 > /dev/null; then
+        VBoxClient-all
+    else
+        # Try to resize the display to something sensible on a VM
+        if xrandr --output Virtual1 --mode 1360x768; then
+            # From ~/.config/scripts/i3-screens
+            for x in "${XDG_CONFIG_HOME:-$HOME/.config}/fehbg" "$HOME/.fehbg"; do
+                if [ -x "$x" ]; then
+                    "$x"
+                    break
+                fi
+            done
+        fi
+    fi
+}
+
+hook_i3() {
+    notify-send -t 15000 "Welcome to $(hostname)!" \
+        'Press Super+Enter to get started'
+}
+
+hook_zsh() {
+    cat << EOF
+Welcome to $(hostname)!
+==================================================
+
+I'm glad you're ready to explore. Here's a few hints:
+- Use 'fcitx-configtool' to change the keyboard layout (or use the tray icon)
+- Type 'readme' to view the manual
+- Press Super+d to open the application launcher
+- Press Super+Shift+q to quit any application
+
+Happy hacking!
+
+EOF
+}
+
+test -z "${TMUX+x}"
+
+case "$hook" in
+    i3) init_i3;
+esac
+
+live="${XDG_DATA_HOME:-$HOME/.local/share}/live"
+mkdir -p "$live"
+test -f "$live/$hook" && exit 1 || true
+touch "$live/$hook"
+
+case "$hook" in
+    i3) hook_i3 ;;
+    zsh) hook_zsh ;;
+esac

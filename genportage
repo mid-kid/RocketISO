@@ -1,0 +1,106 @@
+#!/bin/sh
+set -eu
+
+BROOT="${2:-/}"
+ROOT="${1:-$PWD/broot}"
+
+src="$BROOT/etc/portage"
+dst="$ROOT/etc/portage"
+if [ ! -d "$dst/.git" ]; then
+    mkdir -p "$dst"  # Make sure the parent directories exist
+    rm -r "$dst"
+    git clone --depth=1 --recursive "file://$src" "$dst"
+    git -C "$dst" remote set-url origin https://github.com/mid-kid/gentoo-config
+    git -C "$dst" gc --aggressive --prune=now
+else
+    git -C "$dst" pull "file://$src" -q
+fi
+
+git -C "$dst" checkout -- .
+
+cat >> "$dst/make.conf" << 'EOF'
+
+# Modifications for live system
+VIDEO_CARDS="amdgpu fbdev intel nouveau radeon radeonsi vesa"  # arch/amd64/make.defaults
+VIDEO_CARDS="$VIDEO_CARDS vmware"
+CPU_FLAGS_X86="mmx mmxext sse sse2"  # arch/amd64/make.defaults
+CFLAGS="-Os -pipe $FLAGS_OPTIM_LTO $FLAGS_OPTIM_PARALLEL $FLAGS_OPTIM_MORE"
+CXXFLAGS="$CFLAGS"
+FFLAGS="$CFLAGS"
+FCFLAGS="$CFLAGS"
+RUSTFLAGS="-Copt-level=s -Clinker-plugin-lto -Clinker=clang -Clink-arg=-fuse-ld=lld"
+EOF
+
+cat >> "$dst/env/clang" << 'EOF'
+
+# Modifications for live system
+CFLAGS="-pipe -Os -flto=thin"
+CXXFLAGS="$CFLAGS"
+EOF
+
+cat >> "$dst/env/sys-kernel/gentoo-kernel" << 'EOF'
+
+# Modifications for live system
+NOLOCALMODCONFIG=y
+EOF
+
+cat >> "$dst/env/sys-kernel/linux-firmware" << 'EOF'
+
+# Modifications for live system
+NOLOCALFIRMCONFIG=y
+EOF
+
+cat >> "$dst/package.env/baseflags" << 'EOF'
+
+# Modifications for live system
+
+# Runtime: Compilation errors in media-libs/mesa and app-emulation/virtualbox
+dev-util/glslang baseflags  # 1.3.261 (GCC 13.2.1_p20231014)
+EOF
+
+cat >> "$dst/package.use/hardware" << 'EOF'
+
+# Modifications for live system
+sys-kernel/linux-firmware -initramfs
+sys-boot/grub GRUB_PLATFORMS: efi-64 pc
+sys-devel/clang LLVM_TARGETS: AMDGPU
+EOF
+
+cat >> "$dst/package.use/wine" << 'EOF'
+
+# Modifications for live system
+sys-devel/clang ABI_X86: 32
+x11-libs/libpciaccess ABI_X86: 32
+EOF
+
+cat >> "$dst/package.use/zz-autounmask" << 'EOF'
+
+# Modifications for live system
+media-libs/mesa xa
+EOF
+
+cat >> "$dst/package.mask/hold" << 'EOF'
+
+# Modifications for live system
+>=dev-lang/python-3.12
+EOF
+
+cat >> "$dst/package.license" << 'EOF'
+
+# Modifications for live system
+sys-firmware/intel-microcode intel-ucode
+EOF
+
+rm "$dst/kernel/config.d/hardware.config"  # Don't add hardware-specific settings
+rm "$dst/package.use/wayland"  # Not using sway in this liveusb, so no wayland
+rm "$dst/package.env/gcc11"  # No need for this hack when not using LTO
+
+chmod -x "$dst/kernel/postinst.d/grub"  # Don't execute grub
+
+# Install kernel symlink
+test -h "$ROOT/etc/kernel" || rm -r "$ROOT/etc/kernel"
+ln -vsfT portage/kernel "$ROOT/etc/kernel"
+
+# Install eix cache
+test "$BROOT" != / || eix-update
+install -Dm664 -o portage -g portage -v "$BROOT/var/cache/eix/portage.eix" "$ROOT/var/cache/eix/portage.eix"

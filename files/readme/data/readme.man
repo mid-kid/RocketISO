@@ -1,0 +1,201 @@
+.Dd $MdocDate$
+.Dt README
+.Sh NAME
+.Nm README
+.Nd "User guide"
+
+.Sh INTRO
+
+Welcome to my little corner of the cyberspace.  This live system that
+you're using right now is my day to day, though I've tidied the place up a
+little before inviting you over.  I hope you don't mind its spartan nature.
+
+.Sh QUICK START
+
+Press
+.Sy "Super+Enter"
+to open a terminal window.  Press
+.Sy "Super+Shift+q"
+to close any window.
+
+To change the keyboard layout, right-click the icon on the system tray or run
+.Sy "fcitx-configtool"
+in a terminal.  The language may be changed by using
+.Sy "rocket-setlang\ en_US.utf8"
+and logging out and back in with
+.Ns Sy "Super+Control+p" Ns "."
+Similarly, you may change the DPI settings (set to 1.25% by default) by using
+.Sy "rocket-setdpi\ 96"
+and logging out and back in.
+
+Press
+.Sy "Super+d"
+to open the application launcher.  Here you'll find a semi-organized list of
+cool applications.  Type to filter or use the arrow keys to navigate and press
+enter to launch an application.  Press
+.Sy "Super+Tab"
+to switch panels.
+
+You'll find the vast amount of user configuration files in
+.Pa "~/.dotfiles" Ns ","
+and system configuration and patches mostly reside in
+.Pa "/etc/portage" Ns "."
+
+You can find more installed applications by using:
+.Dl "eix --world -cF | less"
+
+.Sh KEYBINDS
+
+The window manager is configured with many key bindings assigned to various
+features.  In the interest of brevity, I've listed a few that will get you
+navigating the system quickly enough.  For a full list, be sure to check
+.Pa "~/.config/i3/config" Ns "."
+
+.Ss BASICS
+.Bl -column "------------------" -offset indent
+.It         "Super+Enter"        Ta "Open a terminal"
+.It         "Super+Shift+Enter"  Ta "Open a floating terminal"
+.It         "Super+d"            Ta "Open the application launcher"
+.It         "Super+Shift+q"      Ta "Close a window"
+.El
+.Ss WINDOW MANAGEMENT
+.Bl -column "------------------" -offset indent
+.It         "Super+Left click"   Ta "Drag a window"
+.It         "Super+Right click"  Ta "Resize a window"
+.It         "Super+w"            Ta "Tabbed layout"
+.It         "Super+e"            Ta "Split layout (toggles between horiz. and vert.)"
+.It         "Super+b"            Ta "Show/hide window title"
+.It         "Super+Shift+x"      Ta "Make a window float"
+.El
+.Ss UTILITIES
+.Bl -column "------------------" -offset indent
+.It         "Super+Control+p"    Ta "Power menu"
+.It         "Super+Shift+u"      Ta "Calculator"
+.It         "Super+Shift+v"      Ta "Play URL in clipboard with mpv (supports youtube)"
+.It         "Print Screen"       Ta "Make a screenshot (selection)"
+.It         "Shift+Print Screen" Ta "Make a screenshot (full screen)"
+.El
+
+.Sh APPLICATIONS
+
+There's a lot of things installed in this system, and I can't possibly cover
+all of them.  However, I do want to highlight a few that are special to me, be
+that because I configured them extensively or because they fit well in my
+workflow.
+
+.Ss "Firefox"
+
+The firefox installation on this system has been heavily configured. It
+primarily just consists of two components:
+.Bl -bullet -compact -offset indent
+.It
+Arkenfox user.js
+.It
+Lepton theme (photon style)
+.El
+And a script to install these (in
+.Pa "~/.dotfiles/zzz-firefox" Ns ")."
+It also comes with a selection of addons currently installed on my system, some
+of which preconfigured.
+
+.Ss "Vim"
+
+Kind of goes without saying.  I use this program practically without thinking
+at this point.  Some people will find that my configuration is light on the
+IDE-like features, like automatic linting, a context-sensitive autocomplete, or
+good code navigation features.  I sometimes use
+.Sy "ctags"
+to navigate big codebases, as it provides "jump to reference" functionality,
+but I find that I rarely miss features like that.  This is my primary
+programming editor on any system I use.
+
+.Ss "Zim"
+
+My de-facto notetaing tool.  While I've been considering alernatives like
+.Sy "Qownnotes" Ns ","
+and I sometimes edit the files in
+.Sy "Vim"
+instead, this is the tool I always keep coming back to.  It's simple and
+straight to the point, provides plenty of organization and bookkeeping
+features, and can render into various formats suitable for sharing.
+
+.Ss "Teeworlds"
+
+Probably the most addicting jump-and-shoot game in the free software market.
+A real oldie, that I've always kept around for the occasional play.
+
+.Ss "Qalculate!"
+
+A diamond in the rough and one of the newest programs I've been trying to add
+to my workflow, to replace using the
+.Sy "python"
+shell as a calculator all the time.  While it's not the best programming
+calculator, with its hex and bin modes being just a bit too inconvenient, when
+you involve any form of units and unit conversions it's an absolute beast.  For
+someone that has trouble doing mental math, it's a godsent.
+
+.Ss "Firejail"
+
+This is my coping mechanism for when I want/need to run proprietary software
+that I'm not willing to trust.  These days I'm considering alternatives like 
+.Sy "Flatpak" Ns "," 
+though I dread dealing with its package management story.  My bespoke
+configuration lives in
+.Pa "~/.config/firejail" Ns ","
+though the few programs that need it in this live system have already been set
+up.
+
+.Ss "pass"
+
+A password manager.  While not really useful in this live session, it's the one
+that convinced me to take the plunge.  It's really easy to set up, provides
+great integration with both my browser and the rest of my system (through 
+.Sy "passff"
+and
+.Sy "rofi-pass" Ns "),"
+and has a problemless synchronization story due to using git (provided you have
+a trustworthy git/ssh server).  The android app is also excellent.
+Unfortunately, it's a bit lacking on Windows, and not super tight in security
+(though anything's better than bad passwords!), so in the future I might
+consider
+.Sy "KeePassXC" Ns "."
+
+.Ss "nsxiv"
+
+Currently one of the best out of the "simple" image viewers.  Supports animated
+GIFs, a gallery view, and usage in arbitrary scripts as an image picker.
+
+.Ss "keychain"
+
+I once installed this when I had trouble setting up my ssh agent for temporary
+key persistence, and have never touched it since.  It's one of those set and
+forget kind of deals, and it even handles the gpg agent without extra
+configuration.  I'm not even sure what it does exactly, but whatever it does
+it's working great.
+
+.Sh NOTES
+
+A few applications have been hidden from the application launcher, to avoid
+cluttering the interface a little bit too much.  These may be applications that
+are already autostarted by
+.Pa "~/.config/i3/autostart" Ns ","
+require extra configuration to function, are otherwise already accessible
+through a different method, or any other reason.
+
+The removed applications can be found by using:
+.Dl "grep NoDisplay ~/.local/share/applications/*.desktop"
+
+.Sh MOTIVATION
+
+The purpose of this system is twofold.  First, I want to show my setup to
+people, in a way that doesn't require tedious installation instructions and
+actual commitment.  I've tended to my custom scripts, patches and configurations
+for just about a decade now, and this ride has only grown wilder when I started
+using Slackware, and later Gentoo, to the point I have plenty of things that
+I'm sure others would find interesting.  It may not be the most
+screenshot-worthy setup, but I hope this'll give you some ideas to go off of,
+or you find some tools or programs to install for yourself.  Secondly, I want to
+take a snapshot.  Like a picture of my house when I was a lad, I want to be able
+to look back on this.  The GNU/Linux ecosystem keeps changing, causing things to
+break, and me to solve problems differently.  It's also a crystallization of the
+programs and games I liked or used at the time.

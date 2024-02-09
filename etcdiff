@@ -1,0 +1,90 @@
+#!/bin/sh
+set -eu
+
+BROOT="${2:-/}"
+ROOT="${1:-$PWD/root}"
+
+( cd "$BROOT/etc"
+    find \! -type d \
+        \! -path './adjtime' \
+        \! -path './ca-certificates.conf' \
+        \! -path './clang/gentoo-gcc-install.cfg' \
+        \! -path './conf.d/net' \
+        \! -path './conf.d/pydoc-*' \
+        \! -path './config-archive/*' \
+        \! -path './csh.env' \
+        \! -path './cups/*' \
+        \! -path './default/grub' \
+        \! -path './dhcpcd.exit-hook' \
+        \! -path './dracut.conf' \
+        \! -path './env.d/06autoconf*' \
+        \! -path './env.d/06automake*' \
+        \! -path './env.d/50npm' \
+        \! -path './env.d/50rust-*' \
+        \! -path './env.d/60python-docs-*' \
+        \! -path './env.d/90lex' \
+        \! -path './env.d/gcc/x86_64-pc-linux-gnu-*' \
+        \! -path './env.d/rust/*' \
+        \! -path './environment.d/10-gentoo-env.conf' \
+        \! -path './eselect/wine/*' \
+        \! -path './fstab' \
+        \! -path './fusee-launcher/*' \
+        \! -path './fwupd/*' \
+        \! -path './gitconfig' \
+        \! -path './group' \
+        \! -path './group-' \
+        \! -path './grub.d/35_fwupd' \
+        \! -path './gshadow' \
+        \! -path './gshadow-' \
+        \! -path './init.d/fwupd' \
+        \! -path './init.d/pydoc-*' \
+        \! -path './kernel' \
+        \! -path './ld.so.cache' \
+        \! -path './ld.so.conf' \
+        \! -path './ld.so.conf.d/05gcc-x86_64-pc-linux-gnu.conf' \
+        \! -path './local.d/efivars.start' \
+        \! -path './logrotate.d/bootlog' \
+        \! -path './machine-id' \
+        \! -path './modprobe.d/alsa.conf' \
+        \! -path './mpv/scripts/*.so' \
+        \! -path './mtab' \
+        \! -path './mtools/*' \
+        \! -path './npm/*' \
+        \! -path './passwd' \
+        \! -path './passwd-' \
+        \! -path './pki/fwupd-metadata/*' \
+        \! -path './pki/fwupd/*' \
+        \! -path './plymouth/plymouthd.conf' \
+        \! -path './portage/*' \
+        \! -path './printcap' \
+        \! -path './profile.d/.keep' \
+        \! -path './profile.env' \
+        \! -path './resolv.conf' \
+        \! -path './revdep-rebuild/61-openjdk-*' \
+        \! -path './rhashrc' \
+        \! -path './runlevels/*' \
+        \! -path './sandbox.d/20openjdk-*' \
+        \! -path './sgml/*' \
+        \! -path './shadow' \
+        \! -path './shadow-' \
+        \! -path './ssh/*.pub' \
+        \! -path './ssh/*_key' \
+        \! -path './ssh/sshd_config' \
+        \! -path './ssl/certs/*' \
+        \! -path './subgid-' \
+        \! -path './subuid-' \
+        \! -path './sudoers.d/mid-kid' \
+        \! -path './tlp.d/my.conf' \
+        \! -path './udev/rules.d/50-plugdev.rules' \
+        \! -path './udev/rules.d/70-persistent-net.rules' \
+        \! -path './w3m/*' \
+        \! -path './wpa_supplicant/wpa_supplicant.conf' \
+        \! -path './xml/*' \
+    \
+        \! -path './pam.d/swaylock' \
+        \! -path './sway/*' \
+        \! -path './xdg/autostart/xembedsniproxy.desktop' \
+        \! -path './xdg/foot/*' \
+        \! -path './xdg/waybar/*' \
+    -exec diff -q "$BROOT/etc/{}" "$ROOT/etc/{}" \;
+)

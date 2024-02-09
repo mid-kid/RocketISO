@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+qemu-system-x86_64 -drive file=image.iso,format=raw \
+    -bios /usr/share/edk2-ovmf/OVMF_CODE.fd \
+    -enable-kvm \
+    -m 4G

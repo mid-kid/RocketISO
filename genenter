@@ -1,0 +1,39 @@
+#!/bin/sh
+set -eu
+
+CWD="$(dirname "$0")"
+ROOT="${ROOT:-$PWD/broot}"
+REPOS="$PWD/repos"
+DISTDIR="$PWD/distfiles"
+PKGDIR="$PWD/packages"
+
+mkdir -p "$REPOS.wrk"
+mkdir -p "$DISTDIR" "$PKGDIR"
+
+tmp="$(mktemp -d -t geniso.XXXXXXXXXX)"
+mount -o lowerdir="$REPOS",upperdir="$ROOT",workdir="$REPOS.wrk" -t overlay overlay "$tmp"
+
+mount -t tmpfs tmpfs "$tmp/mnt"
+mkdir "$tmp/mnt/build" "$tmp/mnt/scripts" "$tmp/mnt/distfiles"
+mount --bind "$PWD" "$tmp/mnt/build"
+mount --bind -o ro "$CWD" "$tmp/mnt/scripts"
+mount --bind -o ro "$(portageq envvar DISTDIR)" "$tmp/mnt/distfiles"
+
+mkdir -p "$tmp/usr/portage/distfiles"
+mkdir -p "$tmp/usr/portage/packages"
+mount --bind "$DISTDIR" "$tmp/usr/portage/distfiles"
+mount --bind "$PKGDIR" "$tmp/usr/portage/packages"
+
+mount -o nosuid,noexec,nodev -t sysfs sysfs "$tmp/sys"
+mount -o nosuid,noexec,nodev -t proc proc "$tmp/proc"
+mount -o nosuid,noexec -t devtmpfs devtmpfs "$tmp/dev"
+mount -o nosuid,noexec -t devpts devpts "$tmp/dev/pts"
+
+trap true INT
+env -i TERM=linux HOME=/root chroot "$tmp" /bin/bash -l "$@" || true
+
+umount "$tmp/dev/pts" "$tmp/dev" "$tmp/proc" "$tmp/sys"
+umount "$tmp/usr/portage/packages" "$tmp/usr/portage/distfiles"
+umount "$tmp/mnt/build" "$tmp/mnt/scripts" "$tmp/mnt/distfiles" "$tmp/mnt"
+umount "$tmp"
+rm -r "$tmp"

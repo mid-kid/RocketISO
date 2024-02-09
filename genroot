@@ -1,0 +1,65 @@
+#!/bin/sh
+set -eu
+
+opt_build="${build:-n}"
+unset build
+opt_final="${final:-n}"
+unset final
+
+BROOT="$(portageq envvar BROOT)"
+export ROOT="${1:-$PWD/root}"
+test $opt_build = y && ROOT="${1:-$PWD/broot}"
+
+export EMERGE_LOG_DIR="$ROOT/var/log"
+export PORTAGE_LOGDIR="$ROOT/var/log/portage"
+export PORTAGE_TMPDIR="$ROOT/var/tmp"
+export FEATURES='-news -parallel-fetch'
+export QUICKPKG_DEFAULT_OPTS='--include-config=y'  # for --quickpkg-direct=y
+
+# silence linux-info.eclass warnings
+export CHECKCONFIG_DONOTHING=y
+export SKIP_KERNEL_CHECK=y
+
+# Creates an ROOT using portage based on a package list
+mkdir -p "$PORTAGE_TMPDIR" "$EMERGE_LOG_DIR"
+install -v -Dm644 -t "$ROOT/var/lib/portage" \
+    "$BROOT/var/lib/portage/world" "$BROOT/var/lib/portage/world_sets"
+
+# Create base filesystem
+test -d "$ROOT/var/db/pkg" && qlist -Ie sys-apps/baselayout > /dev/null || \
+    USE=build \
+    emerge --ask=n -nU \
+        sys-apps/baselayout
+
+# HACK: Set PKGDIR to a nonsense value to avoid using local binpkgs (as it may ignore package.provided)
+test $opt_final = y || export PKGDIR=/dev/null
+
+# Install all DEPENDs in a broot
+test $opt_build = y && export SYSROOT="$ROOT"
+
+# I have no idea how to install all BDEPENDs
+# So instead, install just enough to avoid circular dependencies
+extrapkg=""
+test $opt_build = y && extrapkg="
+    dev-lang/go
+    dev-lang/rust
+"
+# TODO: Use `qlist -ICF '=%{CATEGORY}/%{PF}' --root "$BROOT"` to install all packages instead
+
+# Install rest of the system
+emerge --ask=n -KDU \
+    --with-bdeps=$opt_build \
+    --quickpkg-direct=$(test $opt_final = y && echo n || echo y) \
+    @world $extrapkg
+
+# Work around bad vim-related symlinks
+# https://bugs.gentoo.org/922614
+for x in "$ROOT/usr/share/vim"/vim*/doc/*.txt; do
+    test -h "$x" || continue
+    link="$(readlink "$x")"
+    case "$link" in
+        "$ROOT/usr/share/vim/vimfiles/doc"/*.txt)
+            ln -sfvrT "$link" "$x"
+            ;;
+    esac
+done

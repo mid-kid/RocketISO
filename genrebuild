@@ -1,0 +1,94 @@
+#!/bin/sh
+set -eu
+
+if [ ! -d /mnt/distfiles ]; then
+    echo "This must be run in a chroot. Be careful!" >&2
+    exit 1
+fi
+
+portage_logdir="${PORTAGE_LOGDIR:-/mnt/build/buildlogs}"
+unset PORTAGE_LOGDIR
+
+export FEATURES='-news -parallel-fetch -buildpkg -binpkg-logs -unmerge-logs'
+export GENTOO_MIRRORS=/mnt/distfiles
+export FETCHCOMMAND='bash -c "echo ${FILE}; read"'
+export CONFIG_PROTECT='-* /etc/locale.gen'
+
+# kernel and modules to use
+kern_pkgs="
+    sys-kernel/gentoo-kernel
+    app-emulation/virtualbox
+    sys-power/acpi_call
+"
+#app-emulation/virtualbox-guest-additions
+kern_del_pkgs="
+    virtual/dist-kernel
+    virtual/linux-sources
+    app-emulation/virtualbox-modules
+"
+# packages to delete
+del_grps="
+    @group-sway-desktop
+"
+del_pkgs="
+    sys-apps/fwupd
+    app-doc/python-docs
+    dev-java/openjdk:11
+    dev-java/openjdk:17
+    sys-devel/gcc:11
+    sys-boot/plymouth-openrc-plugin
+"
+# packages to install in final system
+ins_pkgs="
+    sys-firmware/intel-microcode
+    sys-kernel/dracut
+"
+# packages to install in build environment (deps for ./geniso)
+bld_pkgs="
+    dev-libs/libisoburn
+    sys-fs/mtools
+    sys-fs/squashfs-tools
+"
+
+# Remove some packages
+emerge --ask=n -W $del_grps $del_pkgs $kern_pkgs $kern_del_pkgs
+
+# Check if packages are actually going to be removed
+# NOTE: No status code on exit, so the output must be examined manually
+emerge -pvc $del_pkgs $kern_del_pkgs $kern_pkgs
+
+# Download everything
+emerge --ask=n -fNe @world $ins_pkgs $bld_pkgs $kern_pkgs
+
+# Disabling USE=wayland on gtk+:3 causes everything to not link
+# immodules are loaded to update the cache, causing builds to fail
+# Remove them so they don't get picked up until rebuilt
+rm -rf /usr/lib64/gtk-3.0/3.0.0/immodules
+
+# Configure /etc/locale.gen to avoid building all locales
+cat > /etc/locale.gen << 'EOF'
+C.UTF-8 UTF-8
+EOF
+
+# Make sure USE flags check out before doing anything
+emerge -puDU @world
+emerge --ask=n -uDU @world
+
+# Install extra packages
+emerge --ask=n -n $ins_pkgs
+
+# Get rid of unnecessary packages
+emerge --ask=n -c
+
+# Perform a gcc->glibc cycle (rebuild for -march flags)
+EXTRA_ECONF='--disable-bootstrap' emerge --ask=n -1 sys-devel/gcc
+emerge --ask=n -1 sys-libs/glibc
+
+# Rebuild everything
+PORTAGE_LOGDIR="$portage_logdir" emerge --ask=n -bNe --with-bdeps=y @world
+
+# Install the kernel and modules
+PORTAGE_LOGDIR="$portage_logdir" emerge --ask=n -bNn $kern_pkgs
+
+# Install extra utilities in the build environment
+PORTAGE_LOGDIR="$portage_logdir" emerge --ask=n -bN1n $bld_pkgs

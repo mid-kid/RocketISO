@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+dpi="${1:-}"
+
+if ! printf '%s' "$dpi" | grep -q '^[0-9]\+$'; then
+    echo "Please enter a number" >&2
+    exit 1
+fi
+
+sudo sed -e 's/-dpi [0-9]\+/-dpi '"$dpi"'/' \
+    -i /etc/sddm.conf.d/hidpi.conf
+sed -e 's/Xft\.dpi: [0-9]\+/Xft.dpi: '"$dpi"'/' \
+    -i /home/mid-kid/.Xresources

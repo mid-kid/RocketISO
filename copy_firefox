@@ -1,0 +1,127 @@
+#!/bin/sh
+set -eu
+
+# Firefox configuration is enough of a pain in the ass to warrant its own script
+
+CWD="$(dirname "$0")"
+ffsrc="$1"
+ffdst="$2"
+
+mkdir -p "$ffdst"
+rsync --info=stats0,flist0 -r "$ffsrc/" "$ffdst" \
+    --include=/chrome/ \
+    --include=/extensions/ \
+    --include=/user.js \
+    --include=/userjs/ \
+    --include=/extensions.json \
+    --exclude='/*' \
+    --exclude='/extensions/langpack-*.xpi' \
+    --exclude=/extensions/deArrow@ajay.app.xpi \
+    --exclude=/extensions/jid1-MnnxcxisBPnSXQ@jetpack.xpi \
+    --exclude=/extensions/tridactyl.vim@cmcaine.co.uk.xpi
+# Exclusions:
+# - deArrow@ajay.app DeArrow: Still testing, not a huge fan yet
+# - jid1-MnnxcxisBPnSXQ@jetpack Privacy Badger: Useless defaults when uBlock is used
+# - tridactyl.vim@cmcaine.co.uk Tridactyl: Currently disabled
+
+# Enable all installed extensions
+printf '{"schemaVersion":35,"addons":[' > "$ffdst/extensions.json"
+for x in "$ffdst/extensions"/*.xpi; do
+    name="$(basename "$x" .xpi)"
+    printf '%s' \
+        '{' \
+        '"id":"'"$name"'",' \
+        '"version":"0",' \
+        '"type":"extension",' \
+        '"defaultLocale":{},' \
+        '"visible":true,' \
+        '"active":true,' \
+        '"location":"app-profile"' \
+        '},' >> "$ffdst/extensions.json"
+done
+printf '{}]}' >> "$ffdst/extensions.json"
+
+# Configure default search engine
+cat > "$ffdst/search.json" << 'EOF'
+{
+    "version": 8,
+    "engines": [
+        {
+            "id": "ddg@search.mozilla.orgdefault",
+            "_name": "DuckDuckGo",
+            "_metaData": {}
+        }
+    ],
+    "metaData": {
+        "defaultEngineId": "ddg@search.mozilla.orgdefault"
+    }
+}
+EOF
+
+# Add some additional preferences
+cat > "$ffdst/prefs.js" << 'EOF'
+user_pref("browser.uiCustomization.state", "{
+    \"placements\": {
+        \"nav-bar\": [
+            \"back-button\",
+            \"forward-button\",
+            \"stop-reload-button\",
+            \"urlbar-container\",
+            \"search-container\",
+            \"downloads-button\",
+            \"_testpilot-containers-browser-action\",
+            \"ublock0_raymondhill_net-browser-action\",
+            \"7esoorv3_alefvanoon_anonaddy_me-browser-action\",
+            \"passff_invicem_pro-browser-action\",
+            \"treestyletab_piro_sakura_ne_jp-browser-action\",
+            \"unified-extensions-button\"
+        ]
+    },
+    \"seen\": [
+        \"sponsorblocker_ajay_app-browser-action\"
+    ],
+    \"currentVersion\": 19
+}");
+
+user_pref("extensions.webextensions.uuids", "{
+    \"{aecec67f-0d10-4fa7-b7c7-609a2db280cf}\": \"00000000-0000-0000-0000-000000000000\",
+    \"treestyletab@piro.sakura.ne.jp\": \"00000000-0000-0000-0000-000000000001\",
+    \"jid1-bmMwuNrx3u5hqQ@jetpack\": \"00000000-0000-0000-0000-000000000002\"
+}");
+EOF
+
+# Finding out extension names:
+# cat extensions.json | jq | less  # Look for name and id
+
+# {aecec67f-0d10-4fa7-b7c7-609a2db280cf}: Violentmonkey
+# - Import scripts from zip backup (no script data/settings)
+# - Use about:debugging adn browser.storage.local.set({key:val}) to inject image cache
+# treestyletab@piro.sakura.ne.jp: Tree Style Tab
+# - Default configuration to avoid first-use popups
+# jid1-bmMwuNrx3u5hqQ@jetpack: wasavi
+# - Default configuration to avoid first-use popups
+
+# Install extension configuration
+rsync --info=stats0,flist0 -r "$CWD/data/firefox/" "$ffdst"
+
+# "Compress" the files that require this...
+# Yes, I wrote a non-compressor in posix shell for this
+mozlz4() {
+    len=$(cat "$1" | wc -c)
+    test $len -lt 15 && buf=$(printf %x0 $len) || {
+        buf=f0
+        rem=$(( $len - 15 ))
+        while [ $rem -ge 255 ]; do
+            buf=${buf}ff
+            rem=$(( $rem - 255 ))
+        done
+        buf=$buf$(printf %02x $rem)
+    }
+    datalen=$(( $len + $(printf %s $buf | wc -c) / 2 ))
+    buf=$(printf %08x $datalen | sed 's/../&\n/g' | tac | tr -d \\n)$buf
+    buf=$(printf mozLz40\\0 | xxd -p)$buf
+    echo $buf | xxd -r -p | cat - "$1"
+}
+
+mozlz4 "$ffdst/search.json" > "$ffdst/search.json.mozlz4"
+rm "$ffdst/search.json"

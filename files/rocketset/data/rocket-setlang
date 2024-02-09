@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+if grep -q LANGUAGE /etc/env.d/02locale; then
+    sudo rm /etc/env.d/02locale
+    sudo eselect locale set "$LANG" > /dev/null
+fi
+sudo eselect locale set "${1:-}"

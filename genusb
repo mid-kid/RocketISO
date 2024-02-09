@@ -1,0 +1,52 @@
+#!/bin/sh
+set -eu
+
+dev="$1"
+iso="${2:-$PWD/image.iso}"
+
+devp="$dev"
+if [ "${dev%[0-9]}" != "$dev" ]; then
+    devp="${dev}p"
+fi
+
+cat << EOF | sfdisk "$dev"
+label: gpt
+type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=131072
+type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+EOF
+partprobe "$dev"
+mkfs.vfat -F32 "$devp"1
+mkfs.ext4 -O '^has_journal' -E lazy_itable_init=0 -F "$devp"2
+
+tmp="$(mktemp -d -t genusb.XXXXXXXXXX)"
+mkdir "$tmp/iso" "$tmp/efi" "$tmp/dev"
+mount -o ro "$iso" "$tmp/iso"
+mount "$devp"1 "$tmp/efi"
+mount "$devp"2 "$tmp/dev"
+
+# Copy the base files
+rsync -avP "$tmp/iso/LiveOS/" "$tmp/dev/LiveOS"
+
+# Install grub
+grub-install --target=x86_64-efi --removable --boot-directory="$tmp/dev/boot" --efi-directory="$tmp/efi"
+
+label="$(blkid -o value -s LABEL "$devp"2)"
+uuid="$(blkid -o value -s UUID "$devp"2)"
+
+# Create persistent overlay
+mkdir -p "$tmp/dev/LiveOS/ovlwork" "$tmp/dev/LiveOS/overlay-$label-$uuid"
+
+# Create grub configuration
+cat > "$tmp/dev/boot/grub/grub.cfg" << EOF
+set timeout=1
+set gfxpayload=keep
+insmod all_video
+menuentry 'boot' {
+    linux /LiveOS/bzImage root=live:UUID=$uuid rd.live.overlay=UUID=$uuid mitigations=off loglevel=0
+    initrd /LiveOS/initramfs.img
+}
+EOF
+
+echo 'Unmounting...'
+umount "$tmp/iso" "$tmp/efi" "$tmp/dev"
+rm -r "$tmp"

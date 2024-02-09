@@ -1,0 +1,44 @@
+#!/bin/sh
+set -eu
+
+# Required packages:
+for x in \
+    dev-libs/libisoburn \
+    sys-boot/grub \
+    sys-fs/mtools \
+    sys-fs/squashfs-tools \
+    sys-kernel/dracut
+do
+    qlist -Ie "$x" > /dev/null || emerge --ask=n -1 "$x"
+done
+
+ROOT="${1:-$PWD/root}"
+ISO="${2:-$PWD/iso}"
+OUT="${3:-$PWD/image.iso}"
+
+mkdir -p "$ISO/LiveOS"
+
+test -f "$ISO/LiveOS/squashfs.img" || mksquashfs "$ROOT" "$ISO/LiveOS/squashfs.img"
+
+kver="$(readlink "$ROOT/usr/src/linux")"
+kver="${kver#linux-}"
+
+# -r/--sysroot option currently *heavily* broken (dracut 059)
+test -f "$ISO/LiveOS/initramfs.img" || dracut "$ISO/LiveOS/initramfs.img" "$kver" \
+    --lz4 \
+    --omit plymouth \
+    --add dmsquash-live
+
+test -f "$ISO/LiveOS/bzImage" || cp "$ROOT/usr/src/linux/arch/x86/boot/bzImage" "$ISO/LiveOS/bzImage"
+
+mkdir -p "$ISO/boot/grub"
+cat > "$ISO/boot/grub/grub.cfg" << 'EOF'
+set timeout=1
+set gfxpayload=keep
+insmod all_video
+menuentry 'boot' {
+    linux /LiveOS/bzImage root=live:CDLABEL=ISOIMAGE mitigations=off loglevel=0
+    initrd /LiveOS/initramfs.img
+}
+EOF
+grub-mkrescue -joliet -iso-level 3 -o "$OUT" "$ISO"

@@ -75,6 +75,15 @@ Technical details
 * Based on ::gentoo tree with timestamp `Thu 30 Nov 2023 10:40:01 PM UTC` (metadata/timestamp.x)
 * Tested on laptop, VirtualBox, and libvirt/virt-manager.
 
+Screenshots
+-----------
+
+<img src="screenshots-2024/screenshot-1.png" width="400"/>
+<img src="screenshots-2024/screenshot-2.png" width="400"/>
+<img src="screenshots-2024/screenshot-3.png" width="400"/>
+<img src="screenshots-2024/screenshot-4.png" width="400"/>
+<img src="screenshots-2024/screenshot-5.png" width="400"/>
+
 Documentation
 -------------
 

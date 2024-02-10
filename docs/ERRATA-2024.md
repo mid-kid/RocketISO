@@ -8,6 +8,7 @@ Bugs
 
 * Kdenlive displays white icons on a white background
     * Fix: `kwriteconfig5 --file kdenliverc --group unmanaged --key force_breeze false`
+* `w3m` is not installed (it's a BDEPEND on my system), causing image previews in `ranger` to not work. Consider using `:shell nsxiv -t .` to view images in the current folder instead.
 
 Improvements
 ------------

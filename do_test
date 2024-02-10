@@ -5,6 +5,6 @@ qemu-system-x86_64 -drive file=image.iso,format=raw,readonly=on,media=cdrom \
     -accel kvm \
     -cpu host -smp 4 \
     -m 4G \
-    -display gtk,grab-on-hover=on,gl=on \
+    -display gtk,zoom-to-fit=off,grab-on-hover=on,gl=on \
     -vga virtio \
     -usb -usbdevice tablet

@@ -7,8 +7,8 @@ screenshot", and a time capsule to look back on. Included in the image are a
 whole range of preconfigured applications, ranging from productivity tools to
 games, that I think are awesome or worth checking out. In essence, everything
 that is installed on my real system is included. The current desktop is based
-around Xorg and i3, with some heavy-handed patching to fix a lot of small
-things that concern this specific setup.
+on Xorg and i3, with some heavy-handed patching to fix a lot of small things
+that concern this specific setup.
 
 [**Skip to the Documentation/Downloads section below**](#Documentation)
 

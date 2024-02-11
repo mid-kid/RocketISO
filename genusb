@@ -9,7 +9,7 @@ if [ "${dev%[0-9]}" != "$dev" ]; then
     devp="${dev}p"
 fi
 
-cat << EOF | sfdisk "$dev"
+cat << 'EOF' | sfdisk "$dev"
 label: gpt
 type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=131072
 type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
@@ -37,7 +37,7 @@ uuid="$(blkid -o value -s UUID "$devp"2)"
 mkdir -p "$tmp/dev/LiveOS/ovlwork" "$tmp/dev/LiveOS/overlay-$label-$uuid"
 
 # Create grub configuration
-cat > "$tmp/dev/boot/grub/grub.cfg" << EOF
+cat > "$tmp/dev/boot/grub/grub.cfg" << 'EOF'
 set timeout=1
 set gfxpayload=keep
 insmod all_video

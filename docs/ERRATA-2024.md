@@ -17,3 +17,10 @@ Improvements
 * Figure out a better way to patch `~/.config/picom/picom.conf` in a way that makes it clear it's a live-exclusive setting.
 * Set the hostname to RocketISO rather than PcoketRocket
 * Set the resolution for `Virtual-1` display (qemu) as well, in `files/live`. Also 1280x800 is a better resolution if VirtualBox supports it.
+* Install `mesa-progs` for `glxgears` and `glxinfo`.
+* Add a README button to the polybar, which goes away after clicking.
+* Install `oneko`, `xlivebg` for fun (if still using X11)
+* Install `ponysay` for fun
+* Add a few ROMs for the provided emulators.
+* Reconsider the language and keyboard settings:
+    * Add a boot menu option for the "defaults"?

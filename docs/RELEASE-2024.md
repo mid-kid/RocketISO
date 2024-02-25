@@ -1,7 +1,7 @@
-RocketISO 2024
-==============
+RocketISO 2024: Comfy Edition
+=============================
 
-RocketISO 2024 is a live distribution based on my current main system and
+RocketISO is a live distribution based on my current main system and
 configuration. It serves as a sort of bootable equivalent of a "desktop
 screenshot", and a time capsule to look back on. Included in the image are a
 whole range of preconfigured applications, ranging from productivity tools to

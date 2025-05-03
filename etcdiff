@@ -1,90 +1,107 @@
 #!/bin/sh
 set -eu
 
+# Originally meant to diff /etc only, now just diffs anything relevant between
+# ROOT and BROOT
+
 BROOT="${2:-/}"
 ROOT="${1:-$PWD/root}"
 
-( cd "$BROOT/etc"
-    find \! -type d \
-        \! -path './adjtime' \
-        \! -path './ca-certificates.conf' \
-        \! -path './clang/gentoo-gcc-install.cfg' \
-        \! -path './conf.d/net' \
-        \! -path './conf.d/pydoc-*' \
-        \! -path './config-archive/*' \
-        \! -path './csh.env' \
-        \! -path './cups/*' \
-        \! -path './default/grub' \
-        \! -path './dhcpcd.exit-hook' \
-        \! -path './dracut.conf' \
-        \! -path './env.d/06autoconf*' \
-        \! -path './env.d/06automake*' \
-        \! -path './env.d/50npm' \
-        \! -path './env.d/50rust-*' \
-        \! -path './env.d/60python-docs-*' \
-        \! -path './env.d/90lex' \
-        \! -path './env.d/gcc/x86_64-pc-linux-gnu-*' \
-        \! -path './env.d/rust/*' \
-        \! -path './environment.d/10-gentoo-env.conf' \
-        \! -path './eselect/wine/*' \
-        \! -path './fstab' \
-        \! -path './fusee-launcher/*' \
-        \! -path './fwupd/*' \
-        \! -path './gitconfig' \
-        \! -path './group' \
-        \! -path './group-' \
-        \! -path './grub.d/35_fwupd' \
-        \! -path './gshadow' \
-        \! -path './gshadow-' \
-        \! -path './init.d/fwupd' \
-        \! -path './init.d/pydoc-*' \
-        \! -path './kernel' \
-        \! -path './ld.so.cache' \
-        \! -path './ld.so.conf' \
-        \! -path './ld.so.conf.d/05gcc-x86_64-pc-linux-gnu.conf' \
-        \! -path './local.d/efivars.start' \
-        \! -path './logrotate.d/bootlog' \
-        \! -path './machine-id' \
-        \! -path './modprobe.d/alsa.conf' \
-        \! -path './mpv/scripts/*.so' \
-        \! -path './mtab' \
-        \! -path './mtools/*' \
-        \! -path './npm/*' \
-        \! -path './passwd' \
-        \! -path './passwd-' \
-        \! -path './pki/fwupd-metadata/*' \
-        \! -path './pki/fwupd/*' \
-        \! -path './plymouth/plymouthd.conf' \
-        \! -path './portage/*' \
-        \! -path './printcap' \
-        \! -path './profile.d/.keep' \
-        \! -path './profile.env' \
-        \! -path './resolv.conf' \
-        \! -path './revdep-rebuild/61-openjdk-*' \
-        \! -path './rhashrc' \
-        \! -path './runlevels/*' \
-        \! -path './sandbox.d/20openjdk-*' \
-        \! -path './sgml/*' \
-        \! -path './shadow' \
-        \! -path './shadow-' \
-        \! -path './ssh/*.pub' \
-        \! -path './ssh/*_key' \
-        \! -path './ssh/sshd_config' \
-        \! -path './ssl/certs/*' \
-        \! -path './subgid-' \
-        \! -path './subuid-' \
-        \! -path './sudoers.d/mid-kid' \
-        \! -path './tlp.d/my.conf' \
-        \! -path './udev/rules.d/50-plugdev.rules' \
-        \! -path './udev/rules.d/70-persistent-net.rules' \
-        \! -path './w3m/*' \
-        \! -path './wpa_supplicant/wpa_supplicant.conf' \
-        \! -path './xml/*' \
-    \
-        \! -path './pam.d/swaylock' \
-        \! -path './sway/*' \
-        \! -path './xdg/autostart/xembedsniproxy.desktop' \
-        \! -path './xdg/foot/*' \
-        \! -path './xdg/waybar/*' \
-    -exec diff -q "$BROOT/etc/{}" "$ROOT/etc/{}" \;
-)
+echo --- World diff:
+diff --color=always "$BROOT/var/lib/portage/world" "$ROOT/var/lib/portage/world" || true
+diff --color=always "$BROOT/var/lib/portage/world_sets" "$ROOT/var/lib/portage/world_sets" || true
+echo
+
+tmp="$(mktemp -d -t etcdiff.XXXXXXXXXX)"
+
+echo --- Package diff:
+qlist --root "$BROOT" -Iv > "$tmp/pkgs.broot.txt"
+qlist --root "$ROOT" -Iv > "$tmp/pkgs.root.txt"
+diff --color=always "$tmp/pkgs.broot.txt" "$tmp/pkgs.root.txt" || true
+echo
+
+( cd "$BROOT" && find etc \! -type d -printf '/%p\0' | sort -z > "$tmp/broot.txt" )
+( cd "$ROOT" && find etc \! -type d -printf '/%p\0' | sort -z > "$tmp/root.txt" )
+
+# Find files that exist only in BROOT but aren't part of a package
+comm -z23 "$tmp/broot.txt" "$tmp/root.txt" | xargs -0 qfile -o | tr '\n' '\0' > "$tmp/uniq.txt"
+# This allows me to ignore files from packages that aren't installed in ROOT
+
+# Aggregate that with the files that exist in ROOT
+cat "$tmp/uniq.txt" "$tmp/root.txt" | sort -z | uniq -z > "$tmp/files.txt"
+
+# Filter and diff
+cat "$tmp/files.txt" | grep -zxv \
+    -e '/etc/adjtime' \
+    -e '/etc/bind/rndc.key' \
+    -e '/etc/conf.d/net' \
+    -e '/etc/config-archive/.*' \
+    -e '/etc/cron.hourly/updates' \
+    -e '/etc/csh.env' \
+    -e '/etc/cups/classes.conf' \
+    -e '/etc/cups/classes.conf.O' \
+    -e '/etc/cups/ppd/.*' \
+    -e '/etc/cups/printers.conf' \
+    -e '/etc/cups/printers.conf.O' \
+    -e '/etc/dhcpcd.exit-hook' \
+    -e '/etc/dnsmasq-conf.conf' \
+    -e '/etc/dnsmasq-resolv.conf' \
+    -e '/etc/dracut.conf' \
+    -e '/etc/env.d/rust/last-set' \
+    -e '/etc/environment.d/10-gentoo-env.conf' \
+    -e '/etc/eselect/wine/.*' \
+    -e '/etc/fstab' \
+    -e '/etc/fusee-launcher/.*' \
+    -e '/etc/gitconfig' \
+    -e '/etc/group' \
+    -e '/etc/group-' \
+    -e '/etc/gshadow' \
+    -e '/etc/gshadow-' \
+    -e '/etc/hostname' \
+    -e '/etc/hosts' \
+    -e '/etc/init.d/binfmt' \
+    -e '/etc/init.d/net\..*' \
+    -e '/etc/init.d/procfs' \
+    -e '/etc/init.d/sysfs' \
+    -e '/etc/kernel' \
+    -e '/etc/ld.so.cache' \
+    -e '/etc/ld.so.conf' \
+    -e '/etc/local.d/efivars.start' \
+    -e '/etc/local.d/podman.start' \
+    -e '/etc/machine-id' \
+    -e '/etc/modprobe.d/alsa.conf' \
+    -e '/etc/mpv/scripts/.*' \
+    -e '/etc/mtab' \
+    -e '/etc/passwd' \
+    -e '/etc/passwd-' \
+    -e '/etc/portage/.*' \
+    -e '/etc/printcap' \
+    -e '/etc/profile.csh' \
+    -e '/etc/profile.d/\.keep' \
+    -e '/etc/profile.env' \
+    -e '/etc/resolv.conf' \
+    -e '/etc/runlevels/default/tailscale' \
+    -e '/etc/runlevels/default/tlp' \
+    -e '/etc/runlevels/default/waydroid' \
+    -e '/etc/sgml/catalog' \
+    -e '/etc/sgml/sgml-docbook.cat' \
+    -e '/etc/shadow' \
+    -e '/etc/shadow-' \
+    -e '/etc/ssh/ssh_host_[^_]*_key' \
+    -e '/etc/ssh/ssh_host_[^_]*_key.pub' \
+    -e '/etc/ssh/sshd_config' \
+    -e '/etc/ssl/certs/java/cacerts' \
+    -e '/etc/subgid-' \
+    -e '/etc/subuid-' \
+    -e '/etc/sudoers.d/mid-kid' \
+    -e '/etc/tlp.d/my.conf' \
+    -e '/etc/udev/rules.d/50-plugdev.rules' \
+    -e '/etc/udev/rules.d/70-persistent-net.rules' \
+    -e '/etc/wpa_supplicant/wpa_supplicant.conf' \
+    -e '/etc/xml/catalog' \
+    -e '/etc/xml/docbook' \
+    | xargs -0 -I% diff -q "$BROOT%" "$ROOT%" || true
+
+# FUTURE: Reconsider choices wrt /etc/init.d/{binfmt,procfs,sysfs}
+
+rm -rf "$tmp"

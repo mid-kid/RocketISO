@@ -6,6 +6,9 @@ unset build
 opt_final="${final:-n}"
 unset final
 
+# Allow setting parallelization level of portage... not recommended.
+NPROC="${NPROC:-1}"
+
 BROOT="$(portageq envvar BROOT)"
 export ROOT="${1:-$PWD/root}"
 test $opt_build = y && ROOT="${1:-$PWD/broot}"
@@ -20,7 +23,10 @@ export QUICKPKG_DEFAULT_OPTS='--include-config=y'  # for --quickpkg-direct=y
 export CHECKCONFIG_DONOTHING=y
 export SKIP_KERNEL_CHECK=y
 
-# Creates an ROOT using portage based on a package list
+# Create ROOT directory with the correct permissions
+install -dm00755 -g"$(id -g)" "$ROOT"
+
+# Populate it with a package list from BROOT
 mkdir -p "$PORTAGE_TMPDIR" "$EMERGE_LOG_DIR"
 install -v -Dm644 -t "$ROOT/var/lib/portage" \
     "$BROOT/var/lib/portage/world" "$BROOT/var/lib/portage/world_sets"
@@ -38,19 +44,23 @@ test $opt_final = y || export PKGDIR=/dev/null
 test $opt_build = y && export SYSROOT="$ROOT"
 
 # I have no idea how to install all BDEPENDs
-# So instead, install just enough to avoid circular dependencies
-extrapkg=""
-test $opt_build = y && extrapkg="
-    dev-lang/go
-    dev-lang/rust
-"
-# TODO: Use `qlist -ICF '=%{CATEGORY}/%{PF}' --root "$BROOT"` to install all packages instead
+# So instead, pass a full list of packages...
+pkg="@world"
+test $opt_build = y && pkg="$(qlist -ICF '=%{CATEGORY}/%{PF}' --root "$BROOT/")"
+
+# Sometimes, the running system might have packages that pull old deps,
+# causing the installation of all packages to fail.
+# Sus them out with the following command:
+#   emerge --root /tmp/root --quickpkg-direct=y --tree -pk $(qlist -ICF '=%{CATEGORY}/%{PF}') | tee log; less log
+# Look for packages that depend on things that can't be installed as binpkg
+# Rebuild those packages with:
+#   emerge -1 --changed-deps --binpkg-changed-deps <pkg>
 
 # Install rest of the system
-emerge --ask=n -KDU \
-    --with-bdeps=$opt_build \
+emerge --ask=n -1KDN -j "$NPROC" \
+    --exclude 'sys-kernel/gentoo-kernel:6.6.13' \
     --quickpkg-direct=$(test $opt_final = y && echo n || echo y) \
-    @world $extrapkg
+    $pkg
 
 # Work around bad vim-related symlinks
 # https://bugs.gentoo.org/922614

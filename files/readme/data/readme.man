@@ -1,39 +1,43 @@
-.Dd $MdocDate$
+.Dd $Mdocdate$
 .Dt README
 .Sh NAME
 .Nm README
-.Nd "User guide"
+.Nd "RocketISO Guide"
 
 .Sh INTRO
 
-Welcome to my little corner of the cyberspace.  This live system that
-you're using right now is my day to day, though I've tidied the place up a
-little before inviting you over.  I hope you don't mind its spartan nature.
+Welcome!  You found my personal corner of the internet, I'm happy to have you!
+The live system that you're using right now is my day to day, though I've
+tidied up the place a little before inviting you over.  I hope that this guide
+will help make you feel right at home.
 
 .Sh QUICK START
 
 Press
-.Sy "Super+Enter"
+.Aq "Super+Enter"
 to open a terminal window.  Press
-.Sy "Super+Shift+q"
+.Aq "Super+Shift+q"
 to close any window.
 
-To change the keyboard layout, right-click the icon on the system tray or run
-.Sy "fcitx-configtool"
-in a terminal.  The language may be changed by using
-.Sy "rocket-setlang\ en_US.utf8"
+To change the keyboard layout, right-click the keyboard icon in the system tray
+or run
+.Ic "fcitx-configtool"
+in a terminal.
+
+The system language may be changed by using
+.Ic "rocket-setlang en_US.utf8"
 and logging out and back in with
-.Ns Sy "Super+Control+p" Ns "."
+.Aq "Super+Control+p" Ns "."
 Similarly, you may change the DPI settings (set to 1.25% by default) by using
-.Sy "rocket-setdpi\ 96"
+.Ic "rocket-setdpi 96"
 and logging out and back in.
 
 Press
-.Sy "Super+d"
+.Aq "Super+d"
 to open the application launcher.  Here you'll find a semi-organized list of
 cool applications.  Type to filter or use the arrow keys to navigate and press
 enter to launch an application.  Press
-.Sy "Super+Tab"
+.Aq "Super+Tab"
 to switch panels.
 
 You'll find the vast amount of user configuration files in
@@ -76,6 +80,41 @@ navigating the system quickly enough.  For a full list, be sure to check
 .It         "Shift+Print Screen" Ta "Make a screenshot (full screen)"
 .El
 
+.Sh CONNECTING TO THE INTERNET
+
+RocketISO has a bit of an uncommon network configuration.  It uses openrc's
+excellent netifrc subsystem, which functions like magic by default: It selects
+the right tools to perform the connection depending on what is installed, and
+what network adapter is being used.
+
+In more practical terms, ethernet connections will be managed using ifplugd,
+and once plugged in will launch dhcpcd. No further configuration is required to
+connect.
+
+Wireless connections will be managed using wpa_supplicant, and once connected
+will launch dhcpcd as well.
+
+To connect to a wireless network, a GUI tool is provided, called wpaCute.  You
+can use it as follows:
+
+.Bl -enum -compact
+.It
+Locate the Wireless icon in the system tray and click on it, or launch it in
+the terminal as
+.Ic "wpa-cute" Ns "."
+.It
+Near the top, click on "Scan". Give it a second to collect networks.
+.It
+Double-click your network, type your password, and press "Add".  Close the "Scan
+Results" window.
+.It
+In the "Networks" tab, select your network and press "Enable".  Save the
+configuration using
+.Aq "Control+s" Ns "."
+.It
+The network should now be connected.
+.El
+
 .Sh APPLICATIONS
 
 There's a lot of things installed in this system, and I can't possibly cover
@@ -95,8 +134,7 @@ Lepton theme (photon style)
 .El
 And a script to install these (in
 .Pa "~/.dotfiles/zzz-firefox" Ns ")."
-It also comes with a selection of addons currently installed on my system, some
-of which preconfigured.
+It also comes with all the addons currently installed on my system.
 
 .Ss "Vim"
 
@@ -124,6 +162,14 @@ features, and can render into various formats suitable for sharing.
 Probably the most addicting jump-and-shoot game in the free software market.
 A real oldie, that I've always kept around for the occasional play.
 
+.Ss "Osu!"
+
+The game I've arguably put most time in, ever.  It's a rhythm game with a
+massive community, tonnes of maps, good multiplayer and a healthy leaderboard.
+I've included some songs with this distribution.  See
+.Sx NOTES
+about latency.
+
 .Ss "Qalculate!"
 
 A diamond in the rough and one of the newest programs I've been trying to add
@@ -142,14 +188,14 @@ that I'm not willing to trust.  These days I'm considering alternatives like
 though I dread dealing with its package management story.  My bespoke
 configuration lives in
 .Pa "~/.config/firejail" Ns ","
-though the few programs that need it in this live system have already been set
-up.
+and the few programs using it in this live system have already been configured.
 
 .Ss "pass"
 
 A password manager.  While not really useful in this live session, it's the one
-that convinced me to take the plunge.  It's really easy to set up, provides
-great integration with both my browser and the rest of my system (through 
+that convinced me to try a password manager at all.  It's really easy to set
+up, provides great integration with both my browser and the rest of my system
+(through 
 .Sy "passff"
 and
 .Sy "rofi-pass" Ns "),"
@@ -167,13 +213,22 @@ GIFs, a gallery view, and usage in arbitrary scripts as an image picker.
 
 .Ss "keychain"
 
-I once installed this when I had trouble setting up my ssh agent for temporary
-key persistence, and have never touched it since.  It's one of those set and
-forget kind of deals, and it even handles the gpg agent without extra
-configuration.  I'm not even sure what it does exactly, but whatever it does
-it's working great.
+I once installed this when I has having trouble setting up my ssh agent for
+temporary key persistence, and have never touched it since.  It's one of those
+programs that you set up and forget, and it even handles the gpg agent without
+extra configuration.
 
 .Sh NOTES
+
+The compositor used is
+.Em "picom" Ns "."
+While it usually works great, it may introduce graphical issues on some
+hardware, or increase latency in some games like
+.Sx "Osu!" Ns "."
+To temporarily disable it, issue
+.Ic "killall picom"
+in a terminal.  If you wish to re-enable it after, use
+.Ic "picom -b" Ns "."
 
 A few applications have been hidden from the application launcher, to avoid
 cluttering the interface a little bit too much.  These may be applications that
@@ -189,13 +244,13 @@ The removed applications can be found by using:
 
 The purpose of this system is twofold.  First, I want to show my setup to
 people, in a way that doesn't require tedious installation instructions and
-actual commitment.  I've tended to my custom scripts, patches and configurations
-for just about a decade now, and this ride has only grown wilder when I started
-using Slackware, and later Gentoo, to the point I have plenty of things that
-I'm sure others would find interesting.  It may not be the most
+actual commitment.  I've tended to my custom scripts, patches and
+configurations for just over a decade now, and this ride has only grown wilder
+when I started using Slackware, and later Gentoo, to the point I have plenty of
+things that I'm sure others would find interesting.  It may not be the most
 screenshot-worthy setup, but I hope this'll give you some ideas to go off of,
-or you find some tools or programs to install for yourself.  Secondly, I want to
-take a snapshot.  Like a picture of my house when I was a lad, I want to be able
-to look back on this.  The GNU/Linux ecosystem keeps changing, causing things to
-break, and me to solve problems differently.  It's also a crystallization of the
-programs and games I liked or used at the time.
+or you find some tools or programs to install for yourself.  Secondly, I want
+to take a snapshot, to be able to look back on this.  The GNU/Linux ecosystem
+keeps changing, causing things to break, and me to solve problems differently.
+It's also a crystallization of the programs and games I liked or used at the
+time.

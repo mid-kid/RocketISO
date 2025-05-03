@@ -27,7 +27,7 @@ mount -o lowerdir="$tmp/dev",upperdir="$OVL",workdir="$OVL/../ovlwork" -t overla
         \! -path 'etc/shadow' \
         \! -path 'etc/shadow-' \
     | sort | xargs -I% diff -Nu ../dev/% %
-)
+) || true
 
 umount "$tmp/ovl" "$tmp/dev"
 rm -r "$tmp"

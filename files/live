@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+host=$(hostname)
+
 hook="$1"
 
 init_i3() {
@@ -8,7 +10,9 @@ init_i3() {
         VBoxClient-all
     else
         # Try to resize the display to something sensible on a VM
-        if xrandr --output Virtual1 --mode 1360x768; then
+        for display in Virtual1 Virtual-1; do
+            xrandr --output "$display" --mode 1280x800 || continue
+
             # From ~/.config/scripts/i3-screens
             for x in "${XDG_CONFIG_HOME:-$HOME/.config}/fehbg" "$HOME/.fehbg"; do
                 if [ -x "$x" ]; then
@@ -16,18 +20,19 @@ init_i3() {
                     break
                 fi
             done
-        fi
+        done
     fi
 }
 
 hook_i3() {
-    notify-send -t 15000 "Welcome to $(hostname)!" \
-        'Press Super+Enter to get started'
+    notify-send -t 15000 "Welcome to $host!" \
+        'Press Super+Enter to open a terminal'
+    readme &
 }
 
 hook_zsh() {
     cat << EOF
-Welcome to $(hostname)!
+Welcome to $host!
 ==================================================
 
 I'm glad you're ready to explore. Here's a few hints:

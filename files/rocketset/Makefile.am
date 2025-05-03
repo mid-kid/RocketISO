@@ -1,5 +1,5 @@
-EXTRA_DIST = data/rocket-setlang data/rocket-setdpi
-bin_SCRIPTS = data/rocket-setlang data/rocket-setdpi
+EXTRA_DIST = $(bin_SCRIPTS)
+bin_SCRIPTS = data/rocket-setlang data/rocket-setdpi data/osu-xinput-mode
 bindist: dist
 	tar xf $(distdir).tar.gz
 	mkdir $(distdir)/_build $(distdir)/_inst

@@ -13,6 +13,7 @@ mount -o ro "$sqfs" "$tmp/dev"
 mkdir -p "$OVL" "$OVL/../ovlwork"
 mount -o lowerdir="$tmp/dev",upperdir="$OVL",workdir="$OVL/../ovlwork" -t overlay overlay "$tmp/ovl"
 
+trap true INT QUIT TERM
 "$CWD/gencfg" "$tmp/ovl" || true
 
 umount "$tmp/ovl" "$tmp/dev"

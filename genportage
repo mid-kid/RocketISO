@@ -13,22 +13,28 @@ if [ ! -d "$dst/.git" ]; then
     git -C "$dst" remote set-url origin https://github.com/mid-kid/gentoo-config
     git -C "$dst" gc --aggressive --prune=now
 else
+    git -C "$dst" checkout -- .
     git -C "$dst" pull "file://$src" -q
 fi
 
-git -C "$dst" checkout -- .
-
-cat >> "$dst/make.conf" << 'EOF'
+cat >> "$dst/make.conf/aa-hardware" << 'EOF'
 
 # Modifications for live system
 VIDEO_CARDS="amdgpu fbdev intel nouveau radeon radeonsi vesa"  # arch/amd64/make.defaults
-VIDEO_CARDS="$VIDEO_CARDS vmware"
 CPU_FLAGS_X86="mmx mmxext sse sse2"  # arch/amd64/make.defaults
+VIDEO_CARDS="$VIDEO_CARDS vmware"  # Make things pretty in virtualbox
+INPUT_DEVICES="$INPUT_DEVICES wacom"  # Installing xf86-input-wacom for stylus screens
+EOF
+
+cat >> "$dst/make.conf/main" << 'EOF'
+
+# Modifications for live system
 CFLAGS="-Os -pipe $FLAGS_OPTIM_LTO $FLAGS_OPTIM_PARALLEL $FLAGS_OPTIM_MORE"
 CXXFLAGS="$CFLAGS"
 FFLAGS="$CFLAGS"
 FCFLAGS="$CFLAGS"
 RUSTFLAGS="-Copt-level=s -Clinker-plugin-lto -Clinker=clang -Clink-arg=-fuse-ld=lld"
+USE="$USE bindist"
 EOF
 
 cat >> "$dst/env/clang" << 'EOF'
@@ -50,26 +56,22 @@ cat >> "$dst/env/sys-kernel/linux-firmware" << 'EOF'
 NOLOCALFIRMCONFIG=y
 EOF
 
-cat >> "$dst/package.env/baseflags" << 'EOF'
-
-# Modifications for live system
-
-# Runtime: Compilation errors in media-libs/mesa and app-emulation/virtualbox
-dev-util/glslang baseflags  # 1.3.261 (GCC 13.2.1_p20231014)
-EOF
-
 cat >> "$dst/package.use/hardware" << 'EOF'
 
 # Modifications for live system
 sys-kernel/linux-firmware -initramfs
 sys-boot/grub GRUB_PLATFORMS: efi-64 pc
-sys-devel/clang LLVM_TARGETS: AMDGPU
+EOF
+
+cat >> "$dst/package.use/unnecessary" << 'EOF'
+
+# Modifications for live system
+sys-boot/grub fonts themes
 EOF
 
 cat >> "$dst/package.use/wine" << 'EOF'
 
 # Modifications for live system
-sys-devel/clang ABI_X86: 32
 x11-libs/libpciaccess ABI_X86: 32
 EOF
 
@@ -82,7 +84,7 @@ EOF
 cat >> "$dst/package.mask/hold" << 'EOF'
 
 # Modifications for live system
->=dev-lang/python-3.12
+>=dev-lang/python-3.13  # Avoid installing python versions not in PYTHON_TARGETS
 EOF
 
 cat >> "$dst/package.license" << 'EOF'
@@ -91,14 +93,22 @@ cat >> "$dst/package.license" << 'EOF'
 sys-firmware/intel-microcode intel-ucode
 EOF
 
+cat >> "$dst/package.env/baseflags" << 'EOF'
+
+# Modifications for live system
+# Runtime: Compilation issues in media-libs/mesa and x11-apps/mesa-progs
+dev-util/glslang baseflags  # 1.3.296.0-r1 (GCC 14.2.1_p20241221)
+EOF
+
+sed -e '/\<kde-plasma\/polkit-kde-agent\>/d' \
+    -i "$dst/sets/group-i3-desktop"
+
 rm "$dst/kernel/config.d/hardware.config"  # Don't add hardware-specific settings
 rm "$dst/package.use/wayland"  # Not using sway in this liveusb, so no wayland
-rm "$dst/package.env/gcc11"  # No need for this hack when not using LTO
-
-chmod -x "$dst/kernel/postinst.d/grub"  # Don't execute grub
+rm "$dst/package.env/debug"  # Save a lot of space and some time compiling
 
 # Install kernel symlink
-test -h "$ROOT/etc/kernel" || rm -r "$ROOT/etc/kernel"
+test -h "$ROOT/etc/kernel" || rm -rf "$ROOT/etc/kernel"
 ln -vsfT portage/kernel "$ROOT/etc/kernel"
 
 # Install eix cache

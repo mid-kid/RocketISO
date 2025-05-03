@@ -24,23 +24,6 @@ rsync --info=stats0,flist0 -r "$ffsrc/" "$ffdst" \
 # - jid1-MnnxcxisBPnSXQ@jetpack Privacy Badger: Useless defaults when uBlock is used
 # - tridactyl.vim@cmcaine.co.uk Tridactyl: Currently disabled
 
-# Enable all installed extensions
-printf '{"schemaVersion":35,"addons":[' > "$ffdst/extensions.json"
-for x in "$ffdst/extensions"/*.xpi; do
-    name="$(basename "$x" .xpi)"
-    printf '%s' \
-        '{' \
-        '"id":"'"$name"'",' \
-        '"version":"0",' \
-        '"type":"extension",' \
-        '"defaultLocale":{},' \
-        '"visible":true,' \
-        '"active":true,' \
-        '"location":"app-profile"' \
-        '},' >> "$ffdst/extensions.json"
-done
-printf '{}]}' >> "$ffdst/extensions.json"
-
 # Configure default search engine
 cat > "$ffdst/search.json" << 'EOF'
 {
@@ -75,6 +58,11 @@ user_pref("browser.uiCustomization.state", "{
             \"passff_invicem_pro-browser-action\",
             \"treestyletab_piro_sakura_ne_jp-browser-action\",
             \"unified-extensions-button\"
+        ],
+        \"TabsToolbar\": [
+            \"tabbrowser-tabs\",
+            \"new-tab-button\",
+            \"alltabs-button\"
         ]
     },
     \"seen\": [
@@ -90,16 +78,54 @@ user_pref("extensions.webextensions.uuids", "{
 }");
 EOF
 
-# Finding out extension names:
-# cat extensions.json | jq | less  # Look for name and id
+# Finding out extension parameters:
+# cat extensions.json | jq -C '.addons[]|.id,.defaultLocale.name,.optionalPermissions' | less
 
+# Enable all installed extensions
+printf '{"schemaVersion":36,"addons":[' > "$ffdst/extensions.json"
+for x in "$ffdst/extensions"/*.xpi; do
+    name="$(basename "$x" .xpi)"
+    printf '%s' \
+        '{' \
+        '"id":"'"$name"'",' \
+        '"version":"0",' \
+        '"type":"extension",' \
+        '"defaultLocale":{},' \
+        '"visible":true,' \
+        '"active":true,' \
+        '"location":"app-profile"' \
+        '},' >> "$ffdst/extensions.json"
+done
+printf '{}]}' >> "$ffdst/extensions.json"
+
+# Enable all extensions' permissions
+# Go through the extension permission settings to make sure everything is turned on
+cat > "$ffdst/extension-preferences.json" << 'EOF'
+{
+    "7esoorv3@alefvanoon.anonaddy.me":{"permissions":["bookmarks"],"origins":[]},
+    "@testpilot-containers":{"permissions":["bookmarks","browsingData","nativeMessaging","proxy"],"origins":[]},
+    "@ublacklist":{"permissions":[],"origins":["*://*/*"]},
+    "addon@fastforward.team":{"permissions":[],"origins":["<all_urls>"]},
+    "sponsorBlocker@ajay.app":{"permissions":[],"origins":["*://*/*"]},
+    "treestyletab@piro.sakura.ne.jp":{"permissions":["bookmarks","clipboardRead","tabHide"],"origins":["<all_urls>"]},
+    "{0731d555-4732-4047-99f9-38a388ffa044}":{"permissions":["downloads"],"origins":[]},
+    "{531906d3-e22f-4a6c-a102-8057b88a1a63}":{"permissions":["clipboardWrite","nativeMessaging","bookmarks","webRequest","webRequestBlocking"],"origins":[]},
+    "{60f82f00-9ad5-4de5-b31c-b16a47c51558}":{"permissions":["clipboardWrite"],"origins":[]},
+    "{cb31ec5d-c49a-4e5a-b240-16c767444f62}":{"permissions":[],"origins":["https://*/*"]}
+}
+EOF
+
+# Configurations to put in data/firefox:
+#
 # {aecec67f-0d10-4fa7-b7c7-609a2db280cf}: Violentmonkey
 # - Import scripts from zip backup (no script data/settings)
-# - Use about:debugging adn browser.storage.local.set({key:val}) to inject image cache
+# - Use about:debugging and browser.storage.local.set({key:val}) to inject image cache
 # treestyletab@piro.sakura.ne.jp: Tree Style Tab
 # - Default configuration to avoid first-use popups
 # jid1-bmMwuNrx3u5hqQ@jetpack: wasavi
 # - Default configuration to avoid first-use popups
+#
+# Include the '^userContextId=' directories when copying
 
 # Install extension configuration
 rsync --info=stats0,flist0 -r "$CWD/data/firefox/" "$ffdst"

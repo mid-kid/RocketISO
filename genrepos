@@ -3,6 +3,7 @@ set -eu
 
 BROOT="$(portageq envvar BROOT)"
 ROOT="${1:-$PWD/repos}"
+SQFS="${2:-$PWD/repos.squashfs}"
 
 for name in $(portageq get_repos "$BROOT/"); do
     repo="$(portageq get_repo_path "$BROOT/" "$name")"
@@ -26,3 +27,6 @@ for name in $(portageq get_repos "$BROOT/"); do
             "$src/" "$dst"
     fi
 done
+
+rm -f "$SQFS"
+mksquashfs "$ROOT" "$SQFS" -comp xz

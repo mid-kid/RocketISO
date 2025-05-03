@@ -5,6 +5,8 @@ export LESS='-RX'
 export MANROFFOPT='-c'
 export MANPAGER='less --use-color -Dk+r -Dd+b -Du+c -Dsg -DEg -DPg -DSg'
 
+TERMINAL=urxvt
+
 if [ -n "$DISPLAY" ]; then
     # Absolutely no idea why the 'echo >&0' is necessary, but the
     #  manual turns up blank without it.

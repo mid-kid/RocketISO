@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="mandoc.css" type="text/css" media="all"/>
+  <title>README</title>
+</head>
+<body>
+<table class="head">
+  <tr>
+    <td class="head-ltitle">README</td>
+    <td class="head-vol">LOCAL</td>
+    <td class="head-rtitle">README</td>
+  </tr>
+</table>
+<div class="manual-text">
+<section class="Sh">
+<h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
+<p class="Pp"><code class="Nm">README</code> &#x2014; <span class="Nd">RocketISO
+    Guide</span></p>
+<p class="Pp"></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="INTRO"><a class="permalink" href="#INTRO">INTRO</a></h1>
+<p class="Pp">Welcome! You found my personal corner of the internet, I'm happy
+    to have you! The live system that you're using right now is my day to day,
+    though I've tidied up the place a little before inviting you over. I hope
+    that this guide will help make you feel right at home.</p>
+<p class="Pp"></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="QUICK_START"><a class="permalink" href="#QUICK_START">QUICK
+  START</a></h1>
+<p class="Pp">Press &#x27E8;Super+Enter&#x27E9; to open a terminal window. Press
+    &#x27E8;Super+Shift+q&#x27E9; to close any window.</p>
+<p class="Pp">To change the keyboard layout, right-click the keyboard icon in
+    the system tray or run <code class="Ic">fcitx-configtool</code> in a
+    terminal.</p>
+<p class="Pp">The system language may be changed by using
+    <code class="Ic">rocket-setlang en_US.utf8</code> and logging out and back
+    in with &#x27E8;Super+Control+p.&#x27E9; Similarly, you may change the DPI
+    settings (set to 1.25% by default) by using <code class="Ic">rocket-setdpi
+    96</code> and logging out and back in.</p>
+<p class="Pp">Press &#x27E8;Super+d&#x27E9; to open the application launcher.
+    Here you'll find a semi-organized list of cool applications. Type to filter
+    or use the arrow keys to navigate and press enter to launch an application.
+    Press &#x27E8;Super+Tab&#x27E9; to switch panels.</p>
+<p class="Pp">You'll find the vast amount of user configuration files in
+    <span class="Pa">~/.dotfiles</span>, and system configuration and patches
+    mostly reside in <span class="Pa">/etc/portage</span>.</p>
+<p class="Pp">You can find more installed applications by using:</p>
+<div class="Bd Bd-indent"><code class="Li">eix --world -cF | less</code></div>
+<p class="Pp"></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="KEYBINDS"><a class="permalink" href="#KEYBINDS">KEYBINDS</a></h1>
+<p class="Pp">The window manager is configured with many key bindings assigned
+    to various features. In the interest of brevity, I've listed a few that will
+    get you navigating the system quickly enough. For a full list, be sure to
+    check <span class="Pa">~/.config/i3/config</span>.</p>
+<p class="Pp"></p>
+<section class="Ss">
+<h2 class="Ss" id="BASICS"><a class="permalink" href="#BASICS">BASICS</a></h2>
+<table class="Bl-column Bd-indent">
+  <tr>
+    <td>Super+Enter</td>
+    <td>Open a terminal</td>
+  </tr>
+  <tr>
+    <td>Super+Shift+Enter</td>
+    <td>Open a floating terminal</td>
+  </tr>
+  <tr>
+    <td>Super+d</td>
+    <td>Open the application launcher</td>
+  </tr>
+  <tr>
+    <td>Super+Shift+q</td>
+    <td>Close a window</td>
+  </tr>
+</table>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="WINDOW_MANAGEMENT"><a class="permalink" href="#WINDOW_MANAGEMENT">WINDOW
+  MANAGEMENT</a></h2>
+<table class="Bl-column Bd-indent">
+  <tr>
+    <td>Super+Left click</td>
+    <td>Drag a window</td>
+  </tr>
+  <tr>
+    <td>Super+Right click</td>
+    <td>Resize a window</td>
+  </tr>
+  <tr>
+    <td>Super+w</td>
+    <td>Tabbed layout</td>
+  </tr>
+  <tr>
+    <td>Super+e</td>
+    <td>Split layout (toggles between horiz. and vert.)</td>
+  </tr>
+  <tr>
+    <td>Super+b</td>
+    <td>Show/hide window title</td>
+  </tr>
+  <tr>
+    <td>Super+Shift+x</td>
+    <td>Make a window float</td>
+  </tr>
+</table>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="UTILITIES"><a class="permalink" href="#UTILITIES">UTILITIES</a></h2>
+<table class="Bl-column Bd-indent">
+  <tr>
+    <td>Super+Control+p</td>
+    <td>Power menu</td>
+  </tr>
+  <tr>
+    <td>Super+Shift+u</td>
+    <td>Calculator</td>
+  </tr>
+  <tr>
+    <td>Super+Shift+v</td>
+    <td>Play URL in clipboard with mpv (supports youtube)</td>
+  </tr>
+  <tr>
+    <td>Print Screen</td>
+    <td>Make a screenshot (selection)</td>
+  </tr>
+  <tr>
+    <td>Shift+Print Screen</td>
+    <td>Make a screenshot (full screen)</td>
+  </tr>
+</table>
+<p class="Pp"></p>
+</section>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="CONNECTING_TO_THE_INTERNET"><a class="permalink" href="#CONNECTING_TO_THE_INTERNET">CONNECTING
+  TO THE INTERNET</a></h1>
+<p class="Pp">RocketISO has a bit of an uncommon network configuration. It uses
+    openrc's excellent netifrc subsystem, which functions like magic by default:
+    It selects the right tools to perform the connection depending on what is
+    installed, and what network adapter is being used.</p>
+<p class="Pp">In more practical terms, ethernet connections will be managed
+    using ifplugd, and once plugged in will launch dhcpcd. No further
+    configuration is required to connect.</p>
+<p class="Pp">Wireless connections will be managed using wpa_supplicant, and
+    once connected will launch dhcpcd as well.</p>
+<p class="Pp">To connect to a wireless network, a GUI tool is provided, called
+    wpaCute. You can use it as follows:</p>
+<p class="Pp"></p>
+<ol class="Bl-enum Bl-compact">
+  <li>Locate the Wireless icon in the system tray and click on it, or launch it
+      in the terminal as <code class="Ic">wpa-cute</code>.</li>
+  <li>Near the top, click on &quot;Scan&quot;. Give it a second to collect
+      networks.</li>
+  <li>Double-click your network, type your password, and press &quot;Add&quot;.
+      Close the &quot;Scan Results&quot; window.</li>
+  <li>In the &quot;Networks&quot; tab, select your network and press
+      &quot;Enable&quot;. Save the configuration using
+      &#x27E8;Control+s.&#x27E9;</li>
+  <li>The network should now be connected.</li>
+</ol>
+<p class="Pp"></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="APPLICATIONS"><a class="permalink" href="#APPLICATIONS">APPLICATIONS</a></h1>
+<p class="Pp">There's a lot of things installed in this system, and I can't
+    possibly cover all of them. However, I do want to highlight a few that are
+    special to me, be that because I configured them extensively or because they
+    fit well in my workflow.</p>
+<p class="Pp"></p>
+<section class="Ss">
+<h2 class="Ss" id="Firefox"><a class="permalink" href="#Firefox">Firefox</a></h2>
+<p class="Pp">The firefox installation on this system has been heavily
+    configured. It primarily just consists of two components:</p>
+<ul class="Bl-bullet Bd-indent Bl-compact">
+  <li>Arkenfox user.js</li>
+  <li>Lepton theme (photon style)</li>
+</ul>
+And a script to install these (in
+  <span class="Pa">~/.dotfiles/zzz-firefox</span>). It also comes with all the
+  addons currently installed on my system.
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Vim"><a class="permalink" href="#Vim">Vim</a></h2>
+<p class="Pp">Kind of goes without saying. I use this program practically
+    without thinking at this point. Some people will find that my configuration
+    is light on the IDE-like features, like automatic linting, a
+    context-sensitive autocomplete, or good code navigation features. I
+    sometimes use
+    <a class="permalink" href="#ctags"><b class="Sy" id="ctags">ctags</b></a> to
+    navigate big codebases, as it provides &quot;jump to reference&quot;
+    functionality, but I find that I rarely miss features like that. This is my
+    primary programming editor on any system I use.</p>
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Zim"><a class="permalink" href="#Zim">Zim</a></h2>
+<p class="Pp">My de-facto notetaing tool. While I've been considering
+    alernatives like
+    <a class="permalink" href="#Qownnotes"><b class="Sy" id="Qownnotes">Qownnotes</b></a>,
+    and I sometimes edit the files in <b class="Sy">Vim</b> instead, this is the
+    tool I always keep coming back to. It's simple and straight to the point,
+    provides plenty of organization and bookkeeping features, and can render
+    into various formats suitable for sharing.</p>
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Teeworlds"><a class="permalink" href="#Teeworlds">Teeworlds</a></h2>
+<p class="Pp">Probably the most addicting jump-and-shoot game in the free
+    software market. A real oldie, that I've always kept around for the
+    occasional play.</p>
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Osu!"><a class="permalink" href="#Osu!">Osu!</a></h2>
+<p class="Pp">The game I've arguably put most time in, ever. It's a rhythm game
+    with a massive community, tonnes of maps, good multiplayer and a healthy
+    leaderboard. I've included some songs with this distribution. See
+    <a class="Sx" href="#NOTES">NOTES</a> about latency.</p>
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Qalculate!"><a class="permalink" href="#Qalculate!">Qalculate!</a></h2>
+<p class="Pp">A diamond in the rough and one of the newest programs I've been
+    trying to add to my workflow, to replace using the
+    <a class="permalink" href="#python"><b class="Sy" id="python">python</b></a>
+    shell as a calculator all the time. While it's not the best programming
+    calculator, with its hex and bin modes being just a bit too inconvenient,
+    when you involve any form of units and unit conversions it's an absolute
+    beast. For someone that has trouble doing mental math, it's a godsent.</p>
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Firejail"><a class="permalink" href="#Firejail">Firejail</a></h2>
+<p class="Pp">This is my coping mechanism for when I want/need to run
+    proprietary software that I'm not willing to trust. These days I'm
+    considering alternatives like
+    <a class="permalink" href="#Flatpak"><b class="Sy" id="Flatpak">Flatpak</b></a>,
+    though I dread dealing with its package management story. My bespoke
+    configuration lives in <span class="Pa">~/.config/firejail</span>, and the
+    few programs using it in this live system have already been configured.</p>
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="pass"><a class="permalink" href="#pass">pass</a></h2>
+<p class="Pp">A password manager. While not really useful in this live session,
+    it's the one that convinced me to try a password manager at all. It's really
+    easy to set up, provides great integration with both my browser and the rest
+    of my system (through
+    <a class="permalink" href="#passff"><b class="Sy" id="passff">passff</b></a>
+    and
+    <a class="permalink" href="#rofi-pass"><b class="Sy" id="rofi-pass">rofi-pass</b></a>),
+    and has a problemless synchronization story due to using git (provided you
+    have a trustworthy git/ssh server). The android app is also excellent.
+    Unfortunately, it's a bit lacking on Windows, and not super tight in
+    security (though anything's better than bad passwords!), so in the future I
+    might consider
+    <a class="permalink" href="#KeePassXC"><b class="Sy" id="KeePassXC">KeePassXC</b></a>.</p>
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="nsxiv"><a class="permalink" href="#nsxiv">nsxiv</a></h2>
+<p class="Pp">Currently one of the best out of the &quot;simple&quot; image
+    viewers. Supports animated GIFs, a gallery view, and usage in arbitrary
+    scripts as an image picker.</p>
+<p class="Pp"></p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="keychain"><a class="permalink" href="#keychain">keychain</a></h2>
+<p class="Pp">I once installed this when I has having trouble setting up my ssh
+    agent for temporary key persistence, and have never touched it since. It's
+    one of those programs that you set up and forget, and it even handles the
+    gpg agent without extra configuration.</p>
+<p class="Pp"></p>
+</section>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="NOTES"><a class="permalink" href="#NOTES">NOTES</a></h1>
+<p class="Pp">The compositor used is
+    <a class="permalink" href="#picom"><i class="Em" id="picom">picom</i></a>.
+    While it usually works great, it may introduce graphical issues on some
+    hardware, or increase latency in some games like
+    <a class="Sx" href="#Osu!">Osu!</a>. To temporarily disable it, issue
+    <code class="Ic">killall picom</code> in a terminal. If you wish to
+    re-enable it after, use <code class="Ic">picom -b</code>.</p>
+<p class="Pp">A few applications have been hidden from the application launcher,
+    to avoid cluttering the interface a little bit too much. These may be
+    applications that are already autostarted by
+    <span class="Pa">~/.config/i3/autostart</span>, require extra configuration
+    to function, are otherwise already accessible through a different method, or
+    any other reason.</p>
+<p class="Pp">The removed applications can be found by using:</p>
+<div class="Bd Bd-indent"><code class="Li">grep NoDisplay
+  ~/.local/share/applications/*.desktop</code></div>
+<p class="Pp"></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="MOTIVATION"><a class="permalink" href="#MOTIVATION">MOTIVATION</a></h1>
+<p class="Pp">The purpose of this system is twofold. First, I want to show my
+    setup to people, in a way that doesn't require tedious installation
+    instructions and actual commitment. I've tended to my custom scripts,
+    patches and configurations for just over a decade now, and this ride has
+    only grown wilder when I started using Slackware, and later Gentoo, to the
+    point I have plenty of things that I'm sure others would find interesting.
+    It may not be the most screenshot-worthy setup, but I hope this'll give you
+    some ideas to go off of, or you find some tools or programs to install for
+    yourself. Secondly, I want to take a snapshot, to be able to look back on
+    this. The GNU/Linux ecosystem keeps changing, causing things to break, and
+    me to solve problems differently. It's also a crystallization of the
+    programs and games I liked or used at the time.</p>
+</section>
+</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">April 17, 2025</td>
+    <td class="foot-os"></td>
+  </tr>
+</table>
+</body>
+</html>

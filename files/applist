@@ -1,5 +1,5 @@
 # Format file:
-# tac applist | sed -e '/^$/d' -e '/^#/d' | awk 'BEGIN{x=0}{print x " " $0 ".desktop"; x+=100}' | tac > rofi3.druncache
+# tac applist | sed -e '/^$/d' -e '/^#/d' -e 's/ *#.*$//' | awk 'BEGIN{x=0}{print x " " $0 ".desktop"; x+=100}' | tac > rofi3.druncache
 # Test:
 # XDG_DATA_HOME="$PWD" rofi -show drun -cache-dir .
 
@@ -11,19 +11,22 @@ firefox-clean
 claws-mail
 org.qbittorrent.qBittorrent
 org.telegram.desktop
+com.rtosta.zapzap
 discord
 
 # Primary productivity
+kitty
+urxvt-rxvt-unicode
 vim
 zim
 qalculate-gtk
-org.kde.ktimetracker
+gnucash
 
 # Creative
 libreoffice-startcenter
 zzz-gimp
 org.inkscape.Inkscape
-blender-3.3
+blender-4.2
 org.kde.kdenlive
 com.obsproject.Studio
 audacity
@@ -41,15 +44,20 @@ org.nxengine.nxengine_evo
 osu
 stepmania-5.1
 etterna
+org.prismlauncher.PrismLauncher
 
 # Games-emulators
-io.mgba.mGBA
 bgb
 dolphin-emu
 org.desmume.DeSmuME
 
 # Games-dev
 Tilemap Studio
+
+# Games-misc
+oneko  # cat
+oneko-1  # dog
+killall-oneko
 
 # Multimedia
 mpv
@@ -60,33 +68,38 @@ xpdf
 btop
 htop
 
+# Remote monitoring
+org.kde.krfb
+
 # Analysis
 qdbusviewer
 org.wireshark.Wireshark
 sqlitebrowser
+WebHTTrack
+WebHTTrack-Websites
 
 # File management
 ranger
 org.kde.dolphin
-android-file-transfer
 org.kde.kdeconnect.app
 syncthing-start
 syncthing-ui
 
 # System configuration
 blueman-manager
-qt5ct
+qt6ct
 kvantummanager
-fcitx-configtool
+fcitx5-configtool
+kbd-layout-viewer5  # fcitx
 pavucontrol
+org.rncbc.qpwgraph
 xfce4-power-manager-settings
 org.freedesktop.Piper
-designer-designer-5
 
 # System monitoring 2
+qdbusviewer6-qttools-6
 jstest-gtk
 qv4l2
-qvidcap
 
 # Virtual machines
 virtualbox

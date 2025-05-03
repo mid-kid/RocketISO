@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+
+CWD="$(dirname "$0")"
+osusrc="$1"
+osudst="$2"
+
+mkdir -p "$osudst/Songs"
+
+# Install the skin
+skin='- YUGEN FINAL WS -'
+if [ ! -d "$osudst/Skins/$skin" ]; then
+    mkdir -p "$osudst/Skins"
+    rsync -r "$osusrc/Skins/$skin/" "$osudst/Skins/$skin"
+fi
+
+# Install songs
+while IFS='\n' read -r song; do
+    ! test -d "$osudst/Songs/$song" || continue
+    ! test -f "$osudst/Songs/$song.osz" || continue
+    ( cd "$osusrc/Songs/$song" && zip -9r - . ) > "$osudst/Songs/$song.osz"
+done < "$CWD/files/osusongs"
+
+# Adjust configuration
+sed -e 's/^Skin = .*/Skin = - YUGEN FINAL WS -/' \
+    -e 's/^CursorSize = .*/CursorSize = 0.65/' \
+    -e 's/^Offset = .*/Offset = -24/' \
+    -e 's/^Fullscreen = .*/Fullscreen = 0/' \
+    -i "$osudst/osu!.mid-kid.cfg"
+
+# This somewhat breaks tablet input, and touch input
+    #-e 's/^RawInput = .*/RawInput = 1/' \
+    #-e 's/^MouseSpeed = .*/MouseSpeed = 1.92/' \

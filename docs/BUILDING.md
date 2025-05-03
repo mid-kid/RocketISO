@@ -36,17 +36,28 @@ Similar to making a USB image, but a bit more manual. It's recommended to run th
 Just like genusb, requires UEFI to boot.
 
 ```
-./genenter
-cd /mnt/build
-fallocate -f 20G disk.img
+fallocate -l 20G disk.img
 losetup /dev/loop0 disk.img
-/mnt/scripts/genusb /dev/loop0
+./genusb /dev/loop0
 mount /dev/loop0p2 /mnt
-/mnt/scripts/gencfg_ovl /mnt/LiveOS/overlay-*/
+./gencfg_ovl /mnt/LiveOS/overlay-*/
 umount /mnt
 losetup -d /dev/loop0
 VBoxManage convertfromraw disk.img disk.vdi --format VDI
-rm disk.img
+```
+
+It may also be tested in QEMU:
+```
+qemu-system-x86_64 -enable-kvm \
+    -m 4G \
+    -drive file=disk.img,format=raw \
+    -cpu host,topoext=on \
+    -smp cores=4,threads=2 \
+    -device virtio-vga-gl \
+    -display gtk,gl=on \
+    -audiodev alsa,id=snd0 \
+    -device virtio-sound-pci,audiodev=snd0 \
+    -bios /usr/share/edk2/OvmfX64/OVMF_CODE.fd
 ```
 
 Rebuilding everything to be portable
@@ -54,11 +65,15 @@ Rebuilding everything to be portable
 
 My configuration is usually tailored for a specific (set of) system(s). For this reason, before being able to release an ISO with the processes above, I must modify the portage configuration and rebuild everything.
 
+This is the sequence of commands I use to make the final release.
+
 ```
-build=y ./genroot  # Installs @world (and bdeps, to save some time) into broot/
-./genrepos  # Make a copy of the repositories to checkpoint, in repos/
+./genrepos  # Make a repository snapshot, in repos.squashfs
+
+# Create build environment and rebuild everything
+build=y ./genroot  # Installs @world (and bdeps) into broot/
 ./genportage  # Install and reconfigure /etc/portage into broot/
-./genenter -c /mnt/scripts/genrebuild  # Install/remove pacakges and rebuild everything (takes forever!)
+./genenter -c /mnt/scripts/genrebuild  # Install/remove packages and rebuild everything (takes forever!)
 
 # Build a new rootfs and an iso out of it
 ./genenter -c 'final=y /mnt/scripts/genroot /mnt/build/root'
@@ -70,12 +85,13 @@ build=y ./genroot  # Installs @world (and bdeps, to save some time) into broot/
 ./ovldiff | tee gencfg.diff
 # Optionally use genusb to test it with a USB
 
-# Commit the changes and rebuild
-rm -rf iso image.iso
-./gencfg
+# Commit the changes and rebuild ISO
+./genenter -c '/mnt/scripts/ovlpack /mnt/build/iso/LiveOS/overlay'
+mv iso/LiveOS/overlay.img iso/LiveOS/squashfs.img
+rm -rf iso/LiveOS/{overlay,ovlwork} image.iso
 ./genenter -c '/mnt/scripts/geniso /mnt/build/{root,iso,image.iso}'
-mksquashfs repos repos.squashfs
-mksquashfs distfiles distfiles.squashfs
-mksquashfs packages packages.squashfs
-mksquashfs buildlogs buildlogs.squashfs
+mksquashfs distfiles distfiles.squashfs -comp xz
+mksquashfs packages packages.squashfs -comp xz
+mksquashfs buildlogs buildlogs.squashfs -comp xz
+mksquashfs data data.squashfs -comp xz
 ```

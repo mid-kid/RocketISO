@@ -1,0 +1,2 @@
+#!/bin/sh
+rsync --exclude=iso --exclude=image.iso --exclude=data --exclude=repos -rlP --del . HomeRocket:~/shared/ci-bootstrap/rocketiso

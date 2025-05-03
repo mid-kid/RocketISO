@@ -3,21 +3,26 @@ set -eu
 
 CWD="$(dirname "$0")"
 ROOT="${ROOT:-$PWD/broot}"
-REPOS="$PWD/repos"
-DISTDIR="$PWD/distfiles"
-PKGDIR="$PWD/packages"
+REPOS="$PWD/repos.squashfs"
+DISTDIR="${DISTDIR:-$PWD/distfiles}"
+PKGDIR="${PKGDIR:-$PWD/packages}"
+
+modprobe -q loop || true
 
 mkdir -p "$REPOS.wrk"
 mkdir -p "$DISTDIR" "$PKGDIR"
 
 tmp="$(mktemp -d -t geniso.XXXXXXXXXX)"
-mount -o lowerdir="$REPOS",upperdir="$ROOT",workdir="$REPOS.wrk" -t overlay overlay "$tmp"
+wrk="$REPOS.wrk"
+mount -o ro "$REPOS" "$tmp"
+mount -o lowerdir="$tmp",upperdir="$ROOT",workdir="$wrk",xino=on -t overlay overlay "$tmp"
+# xino=on required to keep python tests from failing due to inode number mismatch
 
 mount -t tmpfs tmpfs "$tmp/mnt"
 mkdir "$tmp/mnt/build" "$tmp/mnt/scripts" "$tmp/mnt/distfiles"
 mount --bind "$PWD" "$tmp/mnt/build"
 mount --bind -o ro "$CWD" "$tmp/mnt/scripts"
-mount --bind -o ro "$(portageq envvar DISTDIR)" "$tmp/mnt/distfiles"
+mount --bind -o ro "${BDISTDIR:-$(portageq envvar DISTDIR)}" "$tmp/mnt/distfiles"
 
 mkdir -p "$tmp/usr/portage/distfiles"
 mkdir -p "$tmp/usr/portage/packages"
@@ -29,11 +34,25 @@ mount -o nosuid,noexec,nodev -t proc proc "$tmp/proc"
 mount -o nosuid,noexec -t devtmpfs devtmpfs "$tmp/dev"
 mount -o nosuid,noexec -t devpts devpts "$tmp/dev/pts"
 
-trap true INT
-env -i TERM=linux HOME=/root chroot "$tmp" /bin/bash -l "$@" || true
+# Use pivot_root to avoid some problems with sandbox in chroot
+# https://bugs.gentoo.org/922960
+trap true INT QUIT TERM
+set +e
+#env -i TERM=linux HOME=/root chroot "$tmp" /bin/bash -l "$@"
+env -i TERM=linux HOME=/root unshare -m /bin/sh -c '
+umask 022
+cd "$1"; shift
+mount --bind . mnt
+pivot_root mnt mnt
+exec chroot . /bin/bash -l "$@"
+' - "$tmp" "$@"
+rc=$?
+set -e
 
 umount "$tmp/dev/pts" "$tmp/dev" "$tmp/proc" "$tmp/sys"
 umount "$tmp/usr/portage/packages" "$tmp/usr/portage/distfiles"
 umount "$tmp/mnt/build" "$tmp/mnt/scripts" "$tmp/mnt/distfiles" "$tmp/mnt"
 umount "$tmp"
-rm -r "$tmp"
+umount "$tmp"
+rm -r "$tmp" "$wrk"
+exit $rc

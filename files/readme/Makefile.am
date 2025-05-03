@@ -1,11 +1,15 @@
-EXTRA_DIST = data/readme.in data/readme.desktop data/readme.man
-CLEANFILES = data/readme
+EXTRA_DIST = data/readme.in data/readme.desktop data/readme.man data/mandoc.css
+CLEANFILES = data/readme data/readme.html
 applicationsdir = $(datadir)/applications
 applications_DATA = data/readme.desktop
 pkgdata_DATA = data/readme.man
 bin_SCRIPTS = data/readme
+html_DATA = data/readme.html data/mandoc.css
 do_subst = \
 	sed -e 's,[@]pkgdatadir[@],$(pkgdatadir),g'
+data/readme.html: data/readme.man
+	@mkdir -p data
+	mandoc -T html -O style=mandoc.css $< > $@
 data/readme: data/readme.in
 	@mkdir -p data
 	$(do_subst) < $< > $@

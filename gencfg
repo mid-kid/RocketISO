@@ -5,6 +5,8 @@ CWD="$(dirname "$0")"
 BROOT="${2:-/}"
 ROOT="${1:-$PWD/root}"
 
+host=RocketISO
+
 # Helpers
 clone_git() {
     echo "clone_git $1"
@@ -16,6 +18,7 @@ clone_git() {
         git -C "$dst" remote set-url origin "$url"
         git -C "$dst" gc --aggressive --prune=now
     else
+        git -C "$dst" checkout -- .
         git -C "$dst" pull "file://$src" --rebase -q
     fi
 }
@@ -51,10 +54,7 @@ mkdir -p "$ROOT/home/mid-kid/.config"
 mkdir -p "$ROOT/home/mid-kid/.local/share"
 
 # Copy configurations
-clone_rsync /etc/modprobe.d \
-    --exclude=alsa.conf
-clone_rsync /etc/modules-load.d \
-    --exclude=loop.conf
+clone_rsync /etc/modules-load.d
 clone_rsync /etc/X11/xorg.conf.d
 clone_rsync /etc/sddm.conf.d \
     --exclude=01gentoo.conf
@@ -63,25 +63,27 @@ clone_rsync /etc/sysctl.d \
 
 clone_file /etc/bluetooth/main.conf
 clone_file /etc/conf.d/display-manager
-clone_file /etc/conf.d/dnsmasq
 clone_file /etc/conf.d/keymaps
-clone_file /etc/conf.d/netmount
 clone_file /etc/cron.weekly/trim
 clone_file /etc/dhcpcd.conf
 clone_file /etc/dnsmasq.conf
+clone_file /etc/eixrc/my
 clone_file /etc/elogind/logind.conf
 clone_file /etc/elogind/system-sleep/50-led_off
 clone_file /etc/env.d/02locale
-clone_file /etc/init.d/mid-kid.tmux -m755
-clone_file /etc/init.d/mid-kid.webfsd -m755
+clone_file /etc/init.d/tmux.mid-kid -m755
+clone_file /etc/init.d/webfsd.mid-kid -m755
 clone_file /etc/local.d/iw_regdom.start -m755
 clone_file /etc/local.d/led_off.start -m755
 clone_file /etc/local.d/portage_clean.start -m755
 clone_file /etc/locale.gen
+clone_file /etc/modprobe.d/pcspkr.conf
+clone_file /etc/modprobe.d/thinkpad_acpi.conf
+clone_file /etc/nsswitch.conf
 clone_file /etc/pam.d/i3lock
 clone_file /etc/polkit-1/rules.d/40-wheel.rules
 clone_file /etc/rc.conf
-clone_file /etc/resolv.conf.head
+clone_file /etc/resolvconf.conf
 clone_file /etc/security/faillock.conf
 clone_file /etc/sudoers
 clone_file /etc/udev/rules.d/10-rfkill.rules
@@ -122,14 +124,22 @@ if [ ! -d "$ffdst" ]; then
 fi
 
 # Copy firejail applications
+firejail_apps='
+    osu
+    ltspice
+'
+firejail_apps_nosetup='
+    discord
+'
 mkdir -p "$ROOT/home/mid-kid/.local/share/firejail"
-for name in osu ltspice; do
-    if [ ! -d "$ROOT/home/mid-kid/.local/share/firejail/$name" ]; then
-        _einfo "Installing /home/mid-kid/.local/share/firejail/$name"
-        tar xf "$CWD/data/firejail/$name.tar.xz" -C \
-            "$ROOT/home/mid-kid/.local/share/firejail"
-    fi
+for name in $firejail_apps; do
+    ! test -d "$ROOT/home/mid-kid/.local/share/firejail/$name" || continue
+    _einfo "Installing /home/mid-kid/.local/share/firejail/$name"
+    tar xf "$CWD/data/firejail/$name.tar.xz" -C \
+        "$ROOT/home/mid-kid/.local/share/firejail"
 done
+osudir="/home/mid-kid/.local/share/firejail/osu/drive_c/users/mid-kid/AppData/Local/osu!/"
+"$CWD/copy_osu" "$BROOT$osudir" "$ROOT$osudir"
 
 # Copy live-specific scripts
 install -v -Dm755 "$CWD/files/live" "$ROOT/home/mid-kid/.config/live"
@@ -139,19 +149,19 @@ _einfo 'Unpacking data/rocketset-0-bin.tar.gz'
 tar xf "$CWD/data/rocketset-0-bin.tar.gz" -C "$ROOT"
 
 mkdir -p "$ROOT/home/mid-kid/.local/share/rofi"
-tac "$CWD/files/applist" | sed -e '/^$/d' -e '/^#/d' | \
+tac "$CWD/files/applist" | sed -e '/^$/d' -e '/^#/d' -e 's/ *#.*$//' | \
     awk 'BEGIN{x=0}{print x " " $0 ".desktop"; x+=100}' | tac \
     > "$ROOT/home/mid-kid/.local/share/rofi/rofi3.druncache"
 
 # Install system configurations
-sed -e '/^hostname=/chostname="PocketRocket"' -i "$ROOT/etc/conf.d/hostname"
-sed -e 's/^[^#].*localhost$/& PocketRocket/' -i "$ROOT/etc/hosts"
+echo "$host" > "$ROOT/etc/hostname"
+sed -e 's/^[^#].*localhost$/& '"$host"'/' -i "$ROOT/etc/hosts"
+
 echo Europe/Madrid > "$ROOT/etc/timezone"
 rm -f "$ROOT/etc/localtime"
 cp "$ROOT/usr/share/zoneinfo/Europe/Madrid" "$ROOT/etc/localtime"
 
 sed -e '/^#\?rc_logger=/crc_logger="YES"' \
-    -e '/^#\?rc_hotplug/crc_hotplug="net.*"' \
     -i "$ROOT/etc/rc.conf"
 
 cat > "$ROOT/etc/fstab" << 'EOF'
@@ -172,17 +182,23 @@ User=mid-kid
 Session=/usr/share/xsessions/i3.desktop
 EOF
 
-ln -vsfT ../kernel/modprobed_db/modprobed_db.sh "$ROOT/etc/local.d/modprobed_db.stop"
-ln -vsfT ../kernel/modprobed_db/modprobed_db.sh "$ROOT/etc/cron.hourly/modprobed_db"
+ln -sfT ../kernel/modprobed_db/modprobed_db.sh "$ROOT/etc/local.d/modprobed_db.stop"
+ln -sfT ../kernel/modprobed_db/modprobed_db.sh "$ROOT/etc/cron.hourly/modprobed_db"
+
+touch "$ROOT/etc/dnsmasq-conf.conf"
 
 # Install user configurations
 test -h "$ROOT/home/mid-kid/.bashrc" || rm -f "$ROOT/home/mid-kid/.bashrc"
 stows="$(find "$ROOT/home/mid-kid/.dotfiles" \
-    -maxdepth 1 ! -name '.*' ! -name 'zzz-*' -printf '%f ')"
-stow -d "$ROOT/home/mid-kid/.dotfiles" -t "$ROOT/home/mid-kid" -v -S $stows
+    -maxdepth 1 -type d ! -name '.*' ! -name 'zzz-*' -printf '%f ')"
+stow --no-folding -d "$ROOT/home/mid-kid/.dotfiles" -t "$ROOT/home/mid-kid" -v -R $stows
 
-sed -e '/^backend = /cbackend = "xrender";' \
-    -i "$ROOT/home/mid-kid/.dotfiles/i3/.config/picom/picom.conf"
+git -C "$ROOT/home/mid-kid/.dotfiles" checkout -- i3/.config/picom/picom.conf
+cat >> "$ROOT/home/mid-kid/.dotfiles/i3/.config/picom/picom.conf" << EOF
+
+# Modifications for live system
+backend = "xrender";
+EOF
 
 mkdir -p "$ROOT/home/mid-kid/.mozilla/firefox/clean"
 cat > "$ROOT/home/mid-kid/.mozilla/firefox/profiles.ini" << 'EOF'
@@ -205,28 +221,47 @@ Version=2
 Default=default
 Locked=1
 EOF
-
 mkdir -p "$ROOT/home/mid-kid/.local/share/applications"
-mkdir -p "$ROOT/home/mid-kid/.local/share/icons"
-for name in discord osu ltspice; do
-    cp "$ROOT/home/mid-kid/.config/firejail/desktop/$name.png" \
-        "$ROOT/home/mid-kid/.local/share/icons/$name.png"
-    sed -e '/^Exec=/s/~/\/home\/mid-kid/' \
-        "$ROOT/home/mid-kid/.config/firejail/desktop/$name.desktop" \
-        > "$ROOT/home/mid-kid/.local/share/applications/$name.desktop"
-done
-
 sed -e '0,/^Name=/{//s/$/ (Clean profile)/}' \
     -e '0,/^Exec=/{//s/=.*/=firefox -P clean %u/}' \
     "$ROOT/usr/share/applications/firefox-esr.desktop" \
     > "$ROOT/home/mid-kid/.local/share/applications/firefox-clean.desktop"
 
+mcver=1.21.4
+mkdir -p "$ROOT/home/mid-kid/.local/share/PrismLauncher/instances/$mcver"
+printf '%s\n' '[General]' \
+    ApplicationTheme=system IconTheme=pe_colored LastHostname="$host" \
+    JavaPath=java Language=en_US UseSystemLocale=true \
+    CloseAfterLaunch=true QuitAfterGameStop=true \
+    > "$ROOT/home/mid-kid/.local/share/PrismLauncher/prismlauncher.cfg"
+echo '{"formatVersion":3,"accounts":[{"type":"MSA","entitlement":{"canPlayMinecraft":true,"ownsMinecraft":true}},{"active":true,"type":"Offline","profile":{"name":"mid-kid","id":"4ad1f41992193cb986741243f14d81e8","skin":{"id":"","url":"","variant":""},"capes":[]}}]}' \
+    > "$ROOT/home/mid-kid/.local/share/PrismLauncher/accounts.json"
+printf '%s\n' '[General]' \
+    ConfigVersion=1.2 InstanceType=OneSix iconKey=default name="$mcver" \
+    > "$ROOT/home/mid-kid/.local/share/PrismLauncher/instances/$mcver/instance.cfg"
+echo '{"formatVersion":1,"components":[{"important":true,"uid":"net.minecraft","version":"'"$mcver"'"}]}' \
+    > "$ROOT/home/mid-kid/.local/share/PrismLauncher/instances/$mcver/mmc-pack.json"
+
+mkdir -p "$ROOT/home/mid-kid/.local/share/applications"
+mkdir -p "$ROOT/home/mid-kid/.local/share/icons"
+for name in $firejail_apps $firejail_apps_nosetup; do
+    cp "$ROOT/home/mid-kid/.config/firejail/desktop/$name.png" \
+        "$ROOT/home/mid-kid/.local/share/icons/$name.png"
+    sed -e '/^Exec=/s/~/\/home\/mid-kid/' \
+        "$ROOT/home/mid-kid/.config/firejail/desktop/$name.desktop" \
+        > "$ROOT/home/mid-kid/.local/share/applications/$name.desktop"
+    if [ "$name" = osu ]; then
+        sed -e 's/ALSAPCM=[^ ]*/ALSAPCM=pipewire/' \
+            -i "$ROOT/home/mid-kid/.local/share/applications/$name.desktop"
+    fi
+done
+
 apps="$ROOT/home/mid-kid/.local/share/applications"
 mkdir -p "$apps"
 
-excl="
+excl='
+    assistant6-qttools-6
     cups
-    fcitx
     lftp
     libreoffice-base
     libreoffice-calc
@@ -234,9 +269,13 @@ excl="
     libreoffice-impress
     libreoffice-math
     libreoffice-writer
+    linguist6-qttools-6
+    lstopo
     org.codeberg.dnkl.foot
     org.codeberg.dnkl.foot-server
     org.codeberg.dnkl.footclient
+    org.fcitx.Fcitx5
+    org.fcitx.fcitx5-migrator
     org.kde.kdeconnect-settings
     org.kde.kdeconnect.nonplasma
     org.kde.kdeconnect.sms
@@ -247,17 +286,17 @@ excl="
     org.kicad.pcbnew
     phononsettings-phonon
     picom
+    qvidcap
     redshift-gtk
     rofi
     rofi-theme-selector
     spicy-spice-gtk
-    urxvt-rxvt-unicode
     wine-browsedrive
     wine-notepad
     wine-uninstaller
     wine-winecfg
-    wpa_gui
-"
+    wpa-cute
+'
 for x in $excl; do
     if [ ! -e "$BROOT/usr/share/applications/$x.desktop" ]; then
         echo "$x.desktop not installed" 2>&1
@@ -270,6 +309,8 @@ for x in $excl; do
 done
 
 # Configure eselect things
+! test -h "$ROOT/etc/fonts/conf.d/10-sub-pixel-none.conf" || \
+    eselect --root="$ROOT" fontconfig disable 10-sub-pixel-none.conf
 for x in "$BROOT/etc/fonts/conf.d"/*.conf; do
     name="$(basename "$x")"
 
@@ -282,18 +323,18 @@ done
 eselect --root="$ROOT" pager set less
 eselect --root="$ROOT" editor set vim
 
-# https://bugs.gentoo.org/921973
-ln -vsfT "$(readlink "$BROOT/etc/java-config-2/current-system-vm")" \
-    "$ROOT/etc/java-config-2/current-system-vm"
-
 # Configure services
 chroot "$ROOT" rc-update add elogind boot
+chroot "$ROOT" rc-update add udev-settle sysinit  # Avoids some hardware issues
 
 for x in "$BROOT/etc/runlevels/default"/*; do
     name="$(basename "$x")"
     case "$name" in
-        validity) continue ;;
         net.*) continue ;;
+        tailscale) continue ;;
+        tlp) continue ;;
+        validity) continue ;;
+        waydroid) continue ;;
     esac
 
     if [ ! -h "$ROOT/etc/runlevels/default/$name" ]; then
@@ -302,10 +343,15 @@ for x in "$BROOT/etc/runlevels/default"/*; do
 done
 
 # The net.* services will be handled through hotplug
-ln -vsfT net.lo "$ROOT/etc/init.d/net.wlan0"
+# Most people don't have more than 4 interfaces surely
 ln -vsfT net.lo "$ROOT/etc/init.d/net.eth0"
-
-#chroot "$ROOT" rc-update add virtualbox-guest-additions default
+ln -vsfT net.lo "$ROOT/etc/init.d/net.eth1"
+ln -vsfT net.lo "$ROOT/etc/init.d/net.eth2"
+ln -vsfT net.lo "$ROOT/etc/init.d/net.eth3"
+ln -vsfT net.lo "$ROOT/etc/init.d/net.wlan0"
+ln -vsfT net.lo "$ROOT/etc/init.d/net.wlan1"
+ln -vsfT net.lo "$ROOT/etc/init.d/net.wlan2"
+ln -vsfT net.lo "$ROOT/etc/init.d/net.wlan3"
 
 # Generate locales
 test -f "$ROOT/usr/lib/locale/locale-archive" || locale-gen -d "$ROOT"

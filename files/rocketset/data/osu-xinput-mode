@@ -1,0 +1,37 @@
+#!/bin/sh
+
+#I_HAVE_CONFIGURED_IT=y
+
+if [ -z "$I_HAVE_CONFIGURED_IT" ]; then
+    echo "This script needs to be adapted to your specific hardware." >&2
+    echo "Please make a copy of it and adapt it." >&2
+    exit 1
+fi
+
+# Some input device transformation matrixes
+## The default
+matrix_def='         1    0    0    0    1    0    0    0    1'
+## 1/4th (top-right) of input device
+matrix_4th_topright='2.1  0    -1   0    2.1  -0.1 0    0    1'
+## 1/8th (bottom-right) of input device
+matrix_8th_botright='4    0    -3   0    4    -3   0    0    1'
+
+# Zooms the touch area of the touchpad and stylus if available, allowing you to
+# play Osu! with a smaller area, and with absolute positioning on a touchpad.
+
+# This doesn't automatically detect your hardware. Make a copy of this script
+# and adapt it.
+
+# Thinkpad C13 Yoga pen
+xinput set-prop "GDIX0000:00 27C6:0ED3 Stylus Pen (0)" \
+    "Coordinate Transformation Matrix" $matrix_8th_botright
+
+# Thinkpad C13 Yoga touchpad
+xinput set-mode "Elan Touchpad" ABSOLUTE
+xinput set-prop "Elan Touchpad" \
+    "Coordinate Transformation Matrix" $matrix_def
+
+# Thinkpad T480/A485 touchpad
+xinput set-mode "SynPS/2 Synaptics TouchPad" ABSOLUTE
+xinput set-prop "SynPS/2 Synaptics TouchPad" \
+    "Coordinate Transformation Matrix" $matrix_def

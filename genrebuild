@@ -17,14 +17,16 @@ export CONFIG_PROTECT='-* /etc/locale.gen'
 # kernel and modules to use
 kern_pkgs="
     sys-kernel/gentoo-kernel
+    sys-kernel/linux-firmware
     app-emulation/virtualbox
-    sys-power/acpi_call
+    sys-firmware/intel-microcode
 "
-#app-emulation/virtualbox-guest-additions
+# things that depend on the kernel packages but aren't in @world
 kern_del_pkgs="
     virtual/dist-kernel
     virtual/linux-sources
     app-emulation/virtualbox-modules
+    app-containers/waydroid
 "
 # packages to delete
 del_grps="
@@ -35,19 +37,26 @@ del_pkgs="
     app-doc/python-docs
     dev-java/openjdk:11
     dev-java/openjdk:17
-    sys-devel/gcc:11
-    sys-boot/plymouth-openrc-plugin
+    app-containers/waydroid-images
 "
+del_pkgs="$del_pkgs sys-boot/plymouth-openrc-plugin"  # Unreliable
+del_pkgs="$del_pkgs custom/python-validity"  # Unreliable, requires additional setup
+del_pkgs="$del_pkgs media-sound/audacity"  # 2.4.2-r3 can't be rebuilt, putting off upgrade to 3.x.
+del_pkgs="$del_pkgs kde-apps/krdc"  # Requires wayland, useless on livecd
+del_pkgs="$del_pkgs kde-misc/kdeconnect"  # Requires wayland, useless on livecd
+del_pkgs="$del_pkgs dev-libs/weston"  # Requires wayland, useless on livecd
+del_pkgs="$del_pkgs net-im/neochat net-im/tokodon custom/ktailctl"  # Requires wayland, bit of a shame
+del_pkgs="$del_pkgs games-fps/xonotic"  # Really big, compresses badly
+del_pkgs="$del_pkgs dev-debug/valgrind"  # glibc is compiled without debug symbols anyway
 # packages to install in final system
 ins_pkgs="
-    sys-firmware/intel-microcode
-    sys-kernel/dracut
 "
 # packages to install in build environment (deps for ./geniso)
 bld_pkgs="
     dev-libs/libisoburn
     sys-fs/mtools
     sys-fs/squashfs-tools
+    sys-kernel/dracut
 "
 
 # Remove some packages
@@ -66,22 +75,20 @@ emerge --ask=n -fNe @world $ins_pkgs $bld_pkgs $kern_pkgs
 rm -rf /usr/lib64/gtk-3.0/3.0.0/immodules
 
 # Configure /etc/locale.gen to avoid building all locales
-cat > /etc/locale.gen << 'EOF'
-C.UTF-8 UTF-8
-EOF
+echo 'C.UTF8 UTF-8' > /etc/locale.gen
 
 # Make sure USE flags check out before doing anything
 emerge -puDU @world
 emerge --ask=n -uDU @world
 
 # Install extra packages
-emerge --ask=n -n $ins_pkgs
+emerge --ask=n -n @world $ins_pkgs
 
 # Get rid of unnecessary packages
 emerge --ask=n -c
 
 # Perform a gcc->glibc cycle (rebuild for -march flags)
-EXTRA_ECONF='--disable-bootstrap' emerge --ask=n -1 sys-devel/gcc
+EXTRA_ECONF=--disable-bootstrap emerge --ask=n -1 sys-devel/gcc
 emerge --ask=n -1 sys-libs/glibc
 
 # Rebuild everything
@@ -91,4 +98,4 @@ PORTAGE_LOGDIR="$portage_logdir" emerge --ask=n -bNe --with-bdeps=y @world
 PORTAGE_LOGDIR="$portage_logdir" emerge --ask=n -bNn $kern_pkgs
 
 # Install extra utilities in the build environment
-PORTAGE_LOGDIR="$portage_logdir" emerge --ask=n -bN1n $bld_pkgs
+PORTAGE_LOGDIR="$portage_logdir" emerge --ask=n -bNn1 $bld_pkgs

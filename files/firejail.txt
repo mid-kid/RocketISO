@@ -1,0 +1,29 @@
+## To generate archives for WINE applications, do the following
+
+app=ltspice
+arch=64
+
+cd ~/.local/share/firejail
+WINEPREFIX="$PWD/$app" WINEARCH="win$arch" ~/.config/scripts/wineinit
+WINEPREFIX="$PWD/$app" wineserver -w
+mv "$app" "$app.low"
+mkdir "$app" "$app.upp" "$app.wrk"
+sudo mount -o lowerdir="$app.low",upperdir="$app.upp",workdir="$app.wrk" -t overlay overlay "$app"
+~/.config/firejail/setup.sh "$app" setup
+
+... follow through the installer and exit ...
+
+sudo umount "$app"
+cp -a "$app.low/dosdevices" "$app.upp/"
+sudo rm -rf "$app" "$app.low" "$app.wrk"
+mv "$app.upp" "$app"
+rm -f "$app/drive_c/windows/Installer"
+rm -f "$app/drive_c/windows/temp"
+rm -f "$app/drive_c/users/$USER/AppData/Local/Temp"
+rm -f "$app/.update-timestamp"
+~/.config/scripts/archive "$app"
+
+## Additional removals for osu
+
+rm osu/drive_c/windows/Fonts/sourcehansans.ttc
+rm -r osu/drive_c/users/$USER/AppData/Local/osu\!/Data/bg/

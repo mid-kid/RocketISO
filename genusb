@@ -37,12 +37,12 @@ uuid="$(blkid -o value -s UUID "$devp"2)"
 mkdir -p "$tmp/dev/LiveOS/ovlwork" "$tmp/dev/LiveOS/overlay-$label-$uuid"
 
 # Create grub configuration
-cat > "$tmp/dev/boot/grub/grub.cfg" << 'EOF'
+cat > "$tmp/dev/boot/grub/grub.cfg" << EOF
 set timeout=1
 set gfxpayload=keep
 insmod all_video
 menuentry 'boot' {
-    linux /LiveOS/bzImage root=live:UUID=$uuid rd.live.overlay=UUID=$uuid mitigations=off loglevel=0
+    linux /LiveOS/bzImage root=live:UUID=$uuid rd.live.overlay=UUID=$uuid loglevel=0
     initrd /LiveOS/initramfs.img
 }
 EOF

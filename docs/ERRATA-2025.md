@@ -11,6 +11,8 @@ Bugs
 * Kdenlive looks broken
     * Fix: Settings/Arranjament -> Color scheme/Esquema de color -> Default/Predeterminat
 * Kernel was compiled without the optimizations in /etc/portage/kernel/config.d. This makes it significantly slower on some machines.
+* Stepmania has no sound. I'm not sure what causes this.
+    * Fix: Open pulseaudio volume control (Mod+v) and change the output of stepmania a few times until it starts working.
 
 Improvements
 ------------

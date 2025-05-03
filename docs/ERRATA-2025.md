@@ -10,6 +10,7 @@ Bugs
 * Power menu on polybar is broken (I haven't touched it in at least 3 years apparently...)
 * Kdenlive looks broken
     * Fix: Settings/Arranjament -> Color scheme/Esquema de color -> Default/Predeterminat
+* Kernel was compiled without the optimizations in /etc/portage/kernel/config.d. This makes it significantly slower on some machines.
 
 Improvements
 ------------

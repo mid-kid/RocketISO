@@ -13,6 +13,7 @@ export FEATURES='-news -parallel-fetch -buildpkg -binpkg-logs -unmerge-logs'
 export GENTOO_MIRRORS=/mnt/distfiles
 export FETCHCOMMAND='bash -c "echo ${FILE}; read"'
 export CONFIG_PROTECT='-* /etc/locale.gen'
+export UNINSTALL_IGNORE='/etc/kernel'  # TODO: Verify that installing installkernel doesn't remove the symlink
 
 # kernel and modules to use
 kern_pkgs="

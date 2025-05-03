@@ -137,11 +137,12 @@ Downloads
 
 The files are all being hosted courtesy of archive.org: [Details page](https://archive.org/details/RocketISO-amd64-2025_1).
 
-Torrent: [RocketISO-amd64-2025\_1\_archive.torrent](https://archive.org/download/RocketISO-amd64-2025_1/RocketISO-amd64-2025_archive.torrent)
+Torrent: [RocketISO-amd64-2025\_1\_archive.torrent](https://archive.org/download/RocketISO-amd64-2025_1/RocketISO-amd64-2025_1_archive.torrent)
 
 Individual files (HTTP):
 
 * [**Bootable ISO**](https://archive.org/download/RocketISO-amd64-2025_1/RocketISO-amd64-2025.iso)
+<p></p>
 
 * [packages.txt](https://archive.org/download/RocketISO-amd64-2025_1/RocketISO-amd64-2025-packages.txt): List of packages included in the ISO.
 * [packages.squashfs](https://archive.org/download/RocketISO-amd64-2025_1/RocketISO-amd64-2025-packages.squashfs): Portage binary packages for all the software used to build the image, including build dependencies which are omitted from the ISO.

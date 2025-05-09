@@ -80,13 +80,6 @@ never feels too great. Problem is, this isn't the only thing that's constantly
 being delayed. Everything is taking forever, and while I can see that I'm
 probably doing too much, I don't want to give up on the hobbies I still enjoy.
 
-I have become fascinated by people who actually cannot function without a
-stable job. Disregarding money problems, people like this will sit at home and
-complain that they have nothing to do. From the perspective of someone who
-always has something to do, I find this bizarre. The world is vast, and there's
-an endless amount of niche interests to pick up and not only entertain
-yourself, but make a difference.
-
 I've recently bought one of them "emulation handhelds". They're little portable
 linux machines, with nice controller inputs. This has shortly reawakened the
 fun in video games for me, as it's very easy to pick up and put down, and

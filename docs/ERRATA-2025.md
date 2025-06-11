@@ -25,3 +25,5 @@ Improvements
 * Add a few ROMs for the provided emulators.
 * Reconsider the language and keyboard settings:
     * Add a boot menu option for the "defaults"?
+* Speed up the boot process by using readahead(2)
+    * Decompression and USB bulk reads get helped by linearity, but how much?
